@@ -1,45 +1,26 @@
-// import { Navigate } from "react-router-dom";
-// import { useEffect, useState } from "react";
-// import { supabase } from "../../supabase/client";
-
-// export default function ProtectedRoute({ children }) {
-//   const [loading, setLoading] = useState(true);
-//   const [user, setUser] = useState(null);
-
-//   useEffect(() => {
-//     const checkUser = async () => {
-//       const { data } = await supabase.auth.getSession();
-//       setUser(data.session);
-//       setLoading(false);
-//     };
-
-//     checkUser();
-//   }, []);
-
-//   if (loading) return <p>Loading...</p>;
-
-//   return user ? children : <Navigate to="/login" />;
-// }
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, allowedRoles }) {
-  // LocalStorage-dan ma'lumotni matn (string) ko'rinishida olamiz
+  // LocalStorage-dan ma'lumotni olamiz
   const userString = localStorage.getItem("user");
 
-  // 1. Agar foydalanuvchi tizimga umuman kirmagan bo'lsa -> Login sahifasiga otib yuborish
+  // 1. Agar foydalanuvchi tizimga umuman kirmagan bo'lsa -> Registratsiya sahifasiga o'tkazish
   if (!userString) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/register" replace />;
   }
 
-  // Matnni JSON obyektga o'giramiz (ichidan rolni o'qish uchun)
+  // Matnni JSON obyektga o'giramiz
   const user = JSON.parse(userString);
 
-  // 2. Agar sahifaga kirish uchun ma'lum rollar talab qilinsa (allowedRoles berilgan bo'lsa)
-  // va foydalanuvchining roli bu ro'yxatda bo'lmasa -> /home sahifasiga qaytarish
+  // 2. Agar foydalanuvchining roli ruxsat berilgan rollar ro'yxatida bo'lmasa:
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/home" replace />;
+    // Roliga qarab tegishli sahifaga qaytarish
+    if (user.role === "admin") {
+      return <Navigate to="/admin-dashboard" replace />;
+    }
+    return <Navigate to="/user-dashboard" replace />;
   }
 
-  // 3. Hamma tekshiruvlardan o'tsa -> Sahifani ko'rsatish
+  // 3. Hamma tekshiruvlardan muvaffaqiyatli o'tsa -> Sahifani ko'rsatish
   return children;
 }
