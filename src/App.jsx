@@ -3,7 +3,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Sahifalarni import qilish
-import Login from "./pages/login/Login";
+// import Login from "./pages/login/Login";
 import Register from "./pages/registrer/Register";
 import UserDash from "./pages/user/userDash/UserDash"; 
 import AdminDashboard from "./pages/admin/admindash/AdminDash"; 
@@ -32,7 +32,7 @@ function App() {
         {/* <Route path="/" element={<Navigate to="/login" />} /> */}
 
         {/* Ochiq sahifalar */}
-        <Route path="/login" element={<Login />} />
+        {/* <Route path="/login" element={<Login />} /> */}
         <Route path="/register" element={<Register />} />
 
         {/* USER DASHBOARD */}
