@@ -3,7 +3,6 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Sahifalarni import qilish
-// import Login from "./pages/login/Login";
 import Register from "./pages/registrer/Register";
 import UserDash from "./pages/user/userDash/UserDash"; 
 import AdminDashboard from "./pages/admin/admindash/AdminDash"; 
@@ -15,9 +14,7 @@ import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
 function App() {
   return (
     <>
-      {/* ✅ ToastContainer-dan xunuk bo'shliq yaratayotgan inline style olib tashlandi.
-        Endi u dashboard elementlarini to'sib qo'ymaydi va o'ng burchakda chiroyli chiqadi.
-      */}
+      {/* ToastContainer bildirishnomalari uchun */}
       <ToastContainer
         position="top-right"
         autoClose={2000}
@@ -29,10 +26,7 @@ function App() {
       />
 
       <Routes>
-        {/* <Route path="/" element={<Navigate to="/login" />} /> */}
-
         {/* Ochiq sahifalar */}
-        {/* <Route path="/login" element={<Login />} /> */}
         <Route path="/register" element={<Register />} />
 
         {/* USER DASHBOARD */}
@@ -65,7 +59,7 @@ function App() {
           }
         />
 
-        {/* Tizimda mavjud bo'lmagan sahifalarga kirganda avtomat yo'naltirish */}
+        {/* Tizimda mavjud bo'lmagan yoki boshlang'ich (/) sahifalarga kirganda avtomat yo'naltirish */}
         <Route
           path="*"
           element={
