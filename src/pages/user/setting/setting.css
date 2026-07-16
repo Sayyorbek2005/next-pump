@@ -92,7 +92,7 @@
     color: #64748b;
   }
   
-  /* Input va Dropdown Bloklari */
+  /* Input Bloklari */
   .settings-input-block {
     display: flex;
     flex-direction: column;
@@ -136,11 +136,7 @@
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
   
-  /* ==========================================
-     SHAXSIY (CUSTOM) DROPDOWN ELEMENTLARI
-     ========================================== */
-  
-  /* Dropdown bosiladigan asosiy qismi (Trigger) */
+  /* Dropdown elementlari */
   .custom-select-trigger {
     width: 100%;
     height: 52px;
@@ -159,14 +155,12 @@
     transition: all 0.2s ease;
   }
   
-  /* Dropdown ochiq holatidagi trigger uslubi */
   .custom-select-trigger.open {
     border-color: #2563eb;
     background-color: #ffffff;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
   
-  /* Viloyat tanlanmagan holatda tuman blokini bloklash */
   .disabled-block {
     opacity: 0.6;
   }
@@ -175,7 +169,6 @@
     cursor: not-allowed;
   }
   
-  /* PASTGA OCHILADIGAN RO'YXAT (OPTIONS MENU) */
   .custom-select-options {
     position: absolute;
     top: 82px; 
@@ -192,7 +185,6 @@
     box-sizing: border-box;
   }
   
-  /* Ro'yxat ichidagi har bir qator (Variant) */
   .custom-option {
     padding: 12px 16px;
     font-size: 15px;
@@ -201,23 +193,18 @@
     transition: background-color 0.15s ease, color 0.15s ease;
   }
   
-  /* Sichqoncha ustiga kelganda */
   .custom-option:hover {
     background-color: #f1f5f9;
     color: #0f172a;
   }
   
-  /* Tanlangan tuman yoki viloyat holati */
   .custom-option.selected {
     background-color: #e8f0fe;
     color: #2563eb;
     font-weight: 600;
   }
   
-  /* ==========================================
-     TUGMALAR VA QO'LLAB QUVVATLASH STILLARI
-     ========================================== */
-  
+  /* Tugmalar */
   .settings-action-buttons {
     display: flex;
     flex-direction: column;
@@ -273,7 +260,11 @@
     border-color: #fca5a5;
   }
   
-  /* 3. MIJOZLARNI QO'LLAB-QUVVATLASH BLOKI */
+  
+  /* ==========================================
+     3. PROFESSIONAL VERTICAL (PASTMA-PAST) MIJOZLAR KARTASI
+     ========================================== */
+  
   .settings-support-container-card {
     background-color: #ffffff;
     border-radius: 16px;
@@ -293,63 +284,121 @@
     border-bottom: 1px solid #f1f5f9;
   }
   
-  .support-blue-icon {
-    color: #2563eb;
-  }
-  
   .settings-support-heading h4 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     color: #0f172a;
     font-weight: 700;
   }
   
-  .settings-support-row {
+  /* 🚀 Ro'yxat ketma-ketligi konteyneri */
+  .settings-support-vertical-list {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px; /* Qatorlar orasidagi masofa */
+    width: 100%;
+  }
+  
+  /* Har bitta kontakt qatori */
+  .support-list-row {
+    display: flex;
     align-items: center;
-    margin-bottom: 14px;
-    gap: 10px;
-  }
-  
-  .support-service-label {
-    font-size: 13px;
-    color: #64748b;
-  }
-  
-  .support-phone-anchor {
-    font-size: 16px;
-    font-weight: 700;
-    color: #2563eb;
+    justify-content: space-between;
+    background-color: #f8fafc; /* Yumshoq foni */
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 16px;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .support-phone-anchor:hover {
-    color: #1d4ed8;
-    text-decoration: underline;
+  /* Sichqoncha ustiga kelganda effekt */
+  .support-list-row:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateX(4px); /* O'ng tomonga yengil surilish effekti */
   }
   
-  .settings-support-telegram-box {
+  /* Chap taraf (Ikonka va Yozuvlar birga) */
+  .support-row-left {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px dashed #cbd5e1;
-    gap: 10px;
+    gap: 14px;
+    overflow: hidden;
   }
   
-  .support-telegram-anchor {
-    font-size: 15px;
+  /* Ikonka atrofidagi yumaloq oq orqa fon */
+  .support-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    flex-shrink: 0;
+  }
+  
+  /* Ikonka o'lchamlari */
+  .support-list-icon {
+    font-size: 18px;
+  }
+  
+  /* Ikonkalarning alohida chiroyli ranglari */
+  .phone-color { color: #10b981; }     /* Yashil */
+  .telegram-color { color: #0ea5e9; }  /* Telegram ko'k */
+  .email-color { color: #f59e0b; }     /* To'q sariq */
+  .link-color { color: #6366f1; }      /* Siyohrang */
+  
+  /* Matnli qism */
+  .support-row-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  /* Tepadagi kichik yozuv (Masalan: Telegram) */
+  .support-row-label {
+    font-size: 11px;
     font-weight: 600;
-    color: #2563eb;
-    text-decoration: underline;
-    transition: opacity 0.2s;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
   }
   
-  .support-telegram-anchor:hover {
-    opacity: 0.8;
+  /* Pastdagi katta qiymat (Masalan: @titova_sam) */
+  .support-row-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* O'ng tarafdagi yo'naltiruvchi kichkina strelka */
+  .support-row-arrow {
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+  
+  .support-list-row:hover .support-row-arrow {
+    color: #2563eb;
+    transform: scale(1.1);
+  }
+  
+  .loading-contacts-text {
+    text-align: center;
+    font-size: 14px;
+    color: #64748b;
+    padding: 10px 0;
   }
   
   /* ==========================================
@@ -365,15 +414,11 @@
       padding: 16px;
     }
   
-    .settings-support-row,
-    .settings-support-telegram-box {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 4px;
+    .support-list-row {
+      padding: 12px;
     }
   
-    .support-phone-anchor {
-      font-size: 15px;
+    .support-row-value {
+      font-size: 13px;
     }
   }

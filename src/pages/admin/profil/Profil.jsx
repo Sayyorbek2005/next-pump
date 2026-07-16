@@ -3,7 +3,8 @@ import {
   FiGlobe, FiSettings, FiLogOut, FiUser, 
   FiAlertTriangle, FiArrowLeft, FiPhone, FiChevronDown 
 } from "react-icons/fi";
-import { FaHeadset } from "react-icons/fa";
+import { FaHeadset, FaTrash, FaEdit, FaSave, FaTimes, FaTelegramPlane } from "react-icons/fa";
+import { supabase } from "../../../supabase/client"; // Supabase clientingiz manzili
 import "./profil.css";
 
 const regionsData = {
@@ -95,14 +96,29 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
   const [showSubSettings, setShowSubSettings] = useState(false);
   const [districtsList, setDistrictsList] = useState([]);
 
-  // Custom Dropdownlar uchun ochiq/yopiq holat statelari
   const [isRegionOpen, setIsRegionOpen] = useState(false);
   const [isDistrictOpen, setIsDistrictOpen] = useState(false);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
   const [editForm, setEditForm] = useState({ ...adminData });
 
   const regionRef = useRef(null);
   const districtRef = useRef(null);
+  const typeDropdownRef = useRef(null);
+
+  // --- QO'LLAB-QUVVATLASH (SUPPORT) STATELARI ---
+  const [contacts, setContacts] = useState([]);
+  const [loadingContacts, setLoadingContacts] = useState(true);
+
+  const [newValue, setNewValue] = useState("");
+  const [newType, setNewType] = useState("phone");
+
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [editType, setEditType] = useState("phone");
+  const [isInlineTypeOpen, setIsInlineTypeOpen] = useState(false);
+
+  const isAdmin = adminData.role?.toLowerCase() === "admin";
 
   const t = {
     uz: {
@@ -117,7 +133,16 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
       confirm: "Chiqish",
       save: "Saqlash",
       myProfile: "Mening profilim",
-      supportTitle: "Mijozlarni qo'llab-quvvatlash xizmati"
+      supportTitle: "Mijozlarni qo'llab-quvvatlash xizmati",
+      staticPhoneLabel: "Aloqa telefoni",
+      staticTgLabel: "Telegram qo'llab-quvvatlash",
+      chooseType: "Turi",
+      phoneOption: "Telefon raqami",
+      tgOption: "Telegram",
+      addBtn: "Qo'shish",
+      writeValuePhone: "Masalan: +998...",
+      writeValueTg: "Masalan: @username yoki havola",
+      confirmDelete: "Rostdan ham o'chirmoqchimisiz?"
     },
     ru: {
       langTitle: "Язык системы (Language)",
@@ -131,7 +156,16 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
       confirm: "Выйти",
       save: "Сохранить",
       myProfile: "Мой профиль",
-      supportTitle: "Служба поддержки клиентов"
+      supportTitle: "Служба поддержки клиентов",
+      staticPhoneLabel: "Телефон для связи",
+      staticTgLabel: "Telegram поддержка",
+      chooseType: "Тип",
+      phoneOption: "Номер телефона",
+      tgOption: "Telegram",
+      addBtn: "Добавить",
+      writeValuePhone: "Например: +998...",
+      writeValueTg: "Например: @username или ссылка",
+      confirmDelete: "Вы действительно хотите удалить?"
     }
   }[lang] || { uz: {} };
 
@@ -155,6 +189,38 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
     }
   }, []);
 
+  const fetchContacts = async () => {
+    setLoadingContacts(true);
+    const { data, error } = await supabase
+      .from("support_contacts")
+      .select("*")
+      .order("id", { ascending: true });
+    
+    if (!error && data) {
+      setContacts(data);
+    }
+    setLoadingContacts(false);
+  };
+
+  useEffect(() => {
+    fetchContacts();
+
+    const channel = supabase
+      .channel("support-realtime-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "support_contacts" },
+        () => {
+          fetchContacts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     if (editForm.region && regionsData[editForm.region]) {
       setDistrictsList(regionsData[editForm.region]);
@@ -163,7 +229,6 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
     }
   }, [editForm.region]);
 
-  // Tashqariga bosilganda dropdownlarni yopish elementlari
   useEffect(() => {
     function handleClickOutside(event) {
       if (regionRef.current && !regionRef.current.contains(event.target)) {
@@ -172,16 +237,303 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
       if (districtRef.current && !districtRef.current.contains(event.target)) {
         setIsDistrictOpen(false);
       }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
+        setIsTypeDropdownOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleAddContact = async (e) => {
+    e.preventDefault();
+    if (!newValue) return;
+
+    const { error } = await supabase
+      .from("support_contacts")
+      .insert([{ label: "", value: newValue, type: newType }]);
+
+    if (!error) {
+      setNewValue("");
+      fetchContacts();
+    } else {
+      alert("Xatolik yuz berdi!");
+    }
+  };
+
+  const handleDeleteContact = async (id) => {
+    const confirmDelete = window.confirm(t.confirmDelete);
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+      .from("support_contacts")
+      .delete()
+      .eq("id", id);
+
+    if (!error) {
+      fetchContacts();
+    }
+  };
+
+  const startEdit = (contact) => {
+    setEditingId(contact.id);
+    setEditValue(contact.value);
+    setEditType(contact.type);
+  };
+
+  const handleUpdateContact = async (id) => {
+    const { error } = await supabase
+      .from("support_contacts")
+      .update({ label: "", value: editValue, type: editType })
+      .eq("id", id);
+
+    if (!error) {
+      setEditingId(null);
+      fetchContacts();
+    }
+  };
 
   const handleSaveSettings = () => {
     setAdminData({ ...editForm });
     localStorage.setItem("user", JSON.stringify({ ...JSON.parse(localStorage.getItem("user") || "{}"), ...editForm }));
     alert(lang === "uz" ? "Ma'lumotlar muvaffaqiyatli saqlandi!" : "Данные успешно сохранены!");
     setShowSubSettings(false);
+  };
+
+  const renderSupportSection = () => {
+    const phoneContacts = contacts.filter((c) => c.type === "phone");
+    const telegramContacts = contacts.filter((c) => c.type === "telegram");
+
+    return (
+      <div className="settings-support-container-card" style={{ marginTop: "20px" }}>
+        <div className="settings-support-heading">
+          <FaHeadset className="support-blue-icon" />
+          <h4>{t.supportTitle}</h4>
+        </div>
+        
+        <div className="support-list" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          
+          {/* ====================================================
+              1. TELEFON RAQAMLARI GURUHI (FAQAT DINAMIK)
+             ==================================================== */}
+          <div className="support-group">
+            <span className="group-label" style={{ fontWeight: "bold", fontSize: "14px", color: "#666", marginBottom: "8px", display: "block" }}>
+              {t.phoneOption}
+            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              
+              {!loadingContacts && phoneContacts.map((contact) => (
+                <div key={contact.id} className="support-item-row dynamic-row">
+                  {editingId === contact.id ? (
+                    <div className="edit-support-inline-form">
+                      <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                        <div className="custom-dropdown-container inline-type-select" style={{ width: "120px", flexShrink: 0 }}>
+                          <div 
+                            className="custom-dropdown-header" 
+                            style={{ height: "34px", padding: "0 8px", fontSize: "12px" }}
+                            onClick={() => setIsInlineTypeOpen(!isInlineTypeOpen)}
+                          >
+                            <span>{editType === "phone" ? t.phoneOption : t.tgOption}</span>
+                            <FiChevronDown />
+                          </div>
+                          {isInlineTypeOpen && (
+                            <div className="custom-dropdown-menu" style={{ zIndex: 1001 }}>
+                              <div className="custom-dropdown-item" onClick={() => { setEditType("phone"); setIsInlineTypeOpen(false); }}>
+                                {t.phoneOption}
+                              </div>
+                              <div className="custom-dropdown-item" onClick={() => { setEditType("telegram"); setIsInlineTypeOpen(false); }}>
+                                {t.tgOption}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <input 
+                          type="text" 
+                          value={editValue} 
+                          onChange={(e) => setEditValue(e.target.value)} 
+                          placeholder={editType === "phone" ? t.writeValuePhone : t.writeValueTg}
+                          className="inline-input"
+                          style={{ flex: 1 }}
+                        />
+                      </div>
+                      <div className="inline-actions">
+                        <button onClick={() => handleUpdateContact(contact.id)} className="action-btn-save"><FaSave /></button>
+                        <button onClick={() => setEditingId(null)} className="action-btn-cancel"><FaTimes /></button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="support-left-content">
+                        <div className="support-icon-wrapper phone-bg">
+                          <FiPhone className="support-icon phone-color" />
+                        </div>
+                        <div className="support-text-details">
+                          <span className="support-label-text">{t.staticPhoneLabel}</span>
+                          <a href={`tel:${contact.value}`} className="support-value-link">{contact.value}</a>
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <div className="support-admin-actions">
+                          <button onClick={() => startEdit(contact)} className="btn-edit"><FaEdit /></button>
+                          <button onClick={() => handleDeleteContact(contact.id)} className="btn-delete"><FaTrash /></button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ====================================================
+              2. TELEGRAM MANZILLARI GURUHI (FAQAT DINAMIK)
+             ==================================================== */}
+          <div className="support-group" style={{ marginTop: "10px" }}>
+            <span className="group-label" style={{ fontWeight: "bold", fontSize: "14px", color: "#666", marginBottom: "8px", display: "block" }}>
+              {t.tgOption}
+            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              
+              {!loadingContacts && telegramContacts.map((contact) => (
+                <div key={contact.id} className="support-item-row dynamic-row">
+                  {editingId === contact.id ? (
+                    <div className="edit-support-inline-form">
+                      <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                        <div className="custom-dropdown-container inline-type-select" style={{ width: "120px", flexShrink: 0 }}>
+                          <div 
+                            className="custom-dropdown-header" 
+                            style={{ height: "34px", padding: "0 8px", fontSize: "12px" }}
+                            onClick={() => setIsInlineTypeOpen(!isInlineTypeOpen)}
+                          >
+                            <span>{editType === "phone" ? t.phoneOption : t.tgOption}</span>
+                            <FiChevronDown />
+                          </div>
+                          {isInlineTypeOpen && (
+                            <div className="custom-dropdown-menu" style={{ zIndex: 1001 }}>
+                              <div className="custom-dropdown-item" onClick={() => { setEditType("phone"); setIsInlineTypeOpen(false); }}>
+                                {t.phoneOption}
+                              </div>
+                              <div className="custom-dropdown-item" onClick={() => { setEditType("telegram"); setIsInlineTypeOpen(false); }}>
+                                {t.tgOption}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <input 
+                          type="text" 
+                          value={editValue} 
+                          onChange={(e) => setEditValue(e.target.value)} 
+                          placeholder={editType === "phone" ? t.writeValuePhone : t.writeValueTg}
+                          className="inline-input"
+                          style={{ flex: 1 }}
+                        />
+                      </div>
+                      <div className="inline-actions">
+                        <button onClick={() => handleUpdateContact(contact.id)} className="action-btn-save"><FaSave /></button>
+                        <button onClick={() => setEditingId(null)} className="action-btn-cancel"><FaTimes /></button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="support-left-content">
+                        <div className="support-icon-wrapper tg-bg">
+                          <FaTelegramPlane className="support-icon tg-color" />
+                        </div>
+                        <div className="support-text-details">
+                          <span className="support-label-text">{t.staticTgLabel}</span>
+                          <a 
+                            href={contact.value.startsWith("http") ? contact.value : `https://t.me/${contact.value.replace("@", "")}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="support-value-link"
+                          >
+                            {contact.value}
+                          </a>
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <div className="support-admin-actions">
+                          <button onClick={() => startEdit(contact)} className="btn-edit"><FaEdit /></button>
+                          <button onClick={() => handleDeleteContact(contact.id)} className="btn-delete"><FaTrash /></button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {loadingContacts && (
+            <p className="loading-text">{lang === "uz" ? "Yuklanmoqda..." : "Загрузка..."}</p>
+          )}
+        </div>
+
+        {/* ====================================================
+            3. YANGI KONTAKT QO'SHISH FORMASI (FAQAT ADMIN)
+           ==================================================== */}
+        {isAdmin && (
+          <form onSubmit={handleAddContact} className="add-contact-form">
+            <div className="form-fields-grid-horizontal">
+              
+              <div className="field-group" ref={typeDropdownRef} style={{ width: "140px" }}>
+                <label>{t.chooseType}</label>
+                <div className="custom-dropdown-container">
+                  <div 
+                    className={`custom-dropdown-header ${isTypeDropdownOpen ? "active" : ""}`}
+                    onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                    style={{ height: "38px", padding: "0 10px", fontSize: "13px" }}
+                  >
+                    <span>{newType === "phone" ? t.phoneOption : t.tgOption}</span>
+                    <FiChevronDown className={`dropdown-arrow-icon ${isTypeDropdownOpen ? "rotate" : ""}`} />
+                  </div>
+                  
+                  {isTypeDropdownOpen && (
+                    <div className="custom-dropdown-menu">
+                      <div 
+                        className={`custom-dropdown-item ${newType === "phone" ? "selected" : ""}`}
+                        onClick={() => {
+                          setNewType("phone");
+                          setIsTypeDropdownOpen(false);
+                        }}
+                      >
+                        {t.phoneOption}
+                      </div>
+                      <div 
+                        className={`custom-dropdown-item ${newType === "telegram" ? "selected" : ""}`}
+                        onClick={() => {
+                          setNewType("telegram");
+                          setIsTypeDropdownOpen(false);
+                        }}
+                      >
+                        {t.tgOption}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="field-group" style={{ flex: 1 }}>
+                <label>{newType === "phone" ? t.phoneOption : t.tgOption}</label>
+                <input 
+                  type="text" 
+                  placeholder={newType === "phone" ? t.writeValuePhone : t.writeValueTg} 
+                  value={newValue} 
+                  onChange={(e) => setNewValue(e.target.value)} 
+                  className="modern-input"
+                  style={{ height: "38px" }}
+                  required 
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="modern-add-btn" style={{ height: "38px", marginTop: "4px" }}>
+              {t.addBtn}
+            </button>
+          </form>
+        )}
+      </div>
+    );
   };
 
   if (showSubSettings) {
@@ -197,7 +549,6 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
           </button>
         </div>
 
-        {/* Avatar qismi - Rasm yuklash (Badge va input) butunlay olib tashlandi */}
         <div className="edit-avatar-container">
           <div className="edit-avatar-wrapper">
             <FiUser className="edit-avatar-icon" />
@@ -205,8 +556,6 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
         </div>
 
         <div className="edit-form-grid">
-          
-          {/* Custom Dropdown: Viloyat */}
           <div className="edit-input-group" ref={regionRef}>
             <label>{lang === "uz" ? "Viloyat" : "Регион"}</label>
             <div className="custom-dropdown-container">
@@ -237,7 +586,6 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
             </div>
           </div>
 
-          {/* Custom Dropdown: Tuman */}
           <div className="edit-input-group" ref={districtRef}>
             <label>{lang === "uz" ? "Tuman" : "Район"}</label>
             <div className="custom-dropdown-container">
@@ -268,7 +616,6 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
             </div>
           </div>
 
-          {/* Ism va Familiya */}
           <div className="edit-input-group">
             <label>{lang === "uz" ? "Ism va Familiya" : "Фамилия и Имя"}</label>
             <input 
@@ -279,7 +626,6 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
             />
           </div>
 
-          {/* Telefon / Referal Raqam */}
           <div className="edit-input-group">
             <label>{lang === "uz" ? "Referal raqami" : "Номер реферала"}</label>
             <div className="phone-input-wrapper">
@@ -294,25 +640,7 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
           </div>
         </div>
 
-        {/* Mijozlarni qo'llab-quvvatlash xizmati */}
-        <div className="settings-support-container-card">
-          <div className="settings-support-heading">
-            <FaHeadset className="support-blue-icon" />
-            <h4>{t.supportTitle}</h4>
-          </div>
-          
-          <div className="settings-support-row">
-            <span className="support-service-label">{lang === "uz" ? "Telefon raqam" : "Номер телефона"}</span>
-            <a href="tel:+998955000044" className="support-phone-anchor">+998 (95) 500 00 44</a>
-          </div>
-
-          <div className="settings-support-telegram-box">
-            <span className="support-service-label">Telegram</span>
-            <a href="https://t.me/titova_sam" target="_blank" rel="noopener noreferrer" className="support-telegram-anchor">
-              @titova_sam
-            </a>
-          </div>
-        </div>
+        {renderSupportSection()}
       </div>
     );
   }
@@ -373,6 +701,8 @@ export default function ProfilTab({ handleLogout, lang, changeLanguage }) {
           </button>
         </div>
       </div>
+
+      {renderSupportSection()}
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>

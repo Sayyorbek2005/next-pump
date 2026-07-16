@@ -4,12 +4,14 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Sahifalarni import qilish
 import Register from "./pages/registrer/Register";
+import Login from "./pages/login/Login";
 import UserDash from "./pages/user/userDash/UserDash"; 
 import AdminDashboard from "./pages/admin/admindash/AdminDash"; 
 import MasterDetail from "./pages/admin/userdetals/UserDestals";
 
 // Himoyalangan marshrut komponenti
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
+import AppInitializer from "./components/appI"; // Yangi qo'shiladigan komponent
 
 function App() {
   return (
@@ -26,7 +28,11 @@ function App() {
       />
 
       <Routes>
+        {/* ENG ASOSIY LINK: Kirganda tekshirish */}
+        <Route path="/" element={<AppInitializer />} />
+
         {/* Ochiq sahifalar */}
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* USER DASHBOARD */}
@@ -49,7 +55,7 @@ function App() {
           }
         />
 
-        {/* YANGI MARSHRUT: Ustaning ID raqami bo'yicha profiliga kirish */}
+        {/* YANGI MARSHRUT */}
         <Route
           path="/admin/master/:id"
           element={
@@ -59,7 +65,7 @@ function App() {
           }
         />
 
-        {/* Tizimda mavjud bo'lmagan yoki boshlang'ich (/) sahifalarga kirganda avtomat yo'naltirish */}
+        {/* Qolgan barcha holatlarda avtomat yo'naltirish */}
         <Route
           path="*"
           element={
@@ -73,7 +79,6 @@ function App() {
   );
 }
 
-// Rollarga qarab avtomat yo'naltiruvchi yordamchi komponent
 function RoleBasedRedirect() {
   const user = JSON.parse(localStorage.getItem("user"));
   if (user?.role === "admin") {

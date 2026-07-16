@@ -11,9 +11,12 @@ import {
   FaHome,
   FaKey,
   FaBookOpen,
-  FaGift
+  FaGift,
+  FaStore, 
+  FaMapMarkerAlt
 } from "react-icons/fa";
 import { supabase } from "../../../supabase/client"; 
+
 import "./home.css"; 
 
 // 📝 Ko'p tilli tarjimalar lug'ati
@@ -48,7 +51,12 @@ const translations = {
     navHome: "Asosiy",
     navCode: "Kod kiritish",
     navCatalog: "Katalog",
-    navShop: "Do'kon"
+    navShop: "Sovg‘alar",
+    ourShops: "Bizning do'konimiz",
+    ourShopsDesc: "Filialimiz joylashuvi va xaritasi",
+    closeBtn: "Yopish",
+    mapSection: "Do'konimiz joylashuvi (Yandex Xarita)",
+    openMapBtn: "Xaritada ochish"
   },
   ru: {
     place: "-е место",
@@ -60,7 +68,7 @@ const translations = {
     adminTips: "Советы от Админа",
     noTips: "Советы отсутствуют.",
     yearLabel: "Год",
-    monthLabel: "Месяц",
+    monthLabel: "Month",
     collectedPoints: "Собранные баллы",
     points: "балл",
     activityStat: "Статистика активности",
@@ -80,7 +88,12 @@ const translations = {
     navHome: "Главная",
     navCode: "Ввод кода",
     navCatalog: "Каталог",
-    navShop: "Магазин"
+    navShop: "Призы",
+    ourShops: "Наш магазин",
+    ourShopsDesc: "Расположение филиала и карта",
+    closeBtn: "Закрыть",
+    mapSection: "Расположение магазина (Яндекс Карта)",
+    openMapBtn: "Открыть на карте"
   }
 };
 
@@ -103,7 +116,7 @@ export default function HomeTab({
   setStatType,
   lang = "uz", 
   monthsUz = monthsUzDefault,
-  setActiveTab // 👈 Navigatsiya almashishi uchun prop
+  setActiveTab 
 }) {
   const [campaigns, setCampaigns] = useState([]);
   const [news, setNews] = useState([]); 
@@ -114,11 +127,14 @@ export default function HomeTab({
   const [monthlyTotalCodes, setMonthlyTotalCodes] = useState(0);
   const [monthlyAverageBonus, setMonthlyAverageBonus] = useState(0);
 
+  const [isShopsOpen, setIsShopsOpen] = useState(false);
+
   const t = translations[lang] || translations["uz"];
   const currentMonthsList = lang === "ru" ? monthsRu : monthsUz;
 
   // 1. FAOL AKSIYALARNI YUKLASH
   useEffect(() => {
+    let isMounted = true;
     const fetchCampaigns = async () => {
       try {
         const now = new Date().toISOString();
@@ -130,16 +146,18 @@ export default function HomeTab({
           .order("created_at", { ascending: false });
         
         if (error) throw error;
-        if (data) setCampaigns(data);
+        if (data && isMounted) setCampaigns(data);
       } catch (error) {
         console.error("Aksiyalarni yuklashda xatolik:", error);
       }
     };
     fetchCampaigns();
+    return () => { isMounted = false; };
   }, []);
 
   // 2. MASLAHATLAR VA YANGILIKLARNI YUKLASH
   useEffect(() => {
+    let isMounted = true;
     const fetchNews = async () => {
       try {
         const { data, error } = await supabase
@@ -148,16 +166,18 @@ export default function HomeTab({
           .order("created_at", { ascending: false });
         
         if (error) throw error;
-        if (data) setNews(data);
+        if (data && isMounted) setNews(data);
       } catch (error) {
         console.error("Maslahatlarni yuklashda xatolik:", error);
       }
     };
     fetchNews();
+    return () => { isMounted = false; };
   }, []);
 
   // 3. DINAMIK FILTRLASH VA STATISTIKANI HISOBLASH
   useEffect(() => {
+    let isMounted = true;
     const fetchRealStatistics = async () => {
       try {
         let activeUserId = userId;
@@ -191,6 +211,8 @@ export default function HomeTab({
           .lt("created_at", endDate);
 
         if (error) throw error;
+
+        if (!isMounted) return;
 
         const approvedCodes = codes ? codes.filter(c => c.status === "approved" || c.status === "confirmed") : [];
         const confirmedBonusSum = approvedCodes.length; 
@@ -259,13 +281,16 @@ export default function HomeTab({
 
       } catch (err) {
         console.error("Statistikani hisoblashda xatolik:", err);
-        const labels = statType === "oy" ? t.monthLabels : t.weekLabels;
-        setChartStats(labels.map(l => ({ label: l, value: 0, realVal: 0, active: false })));
+        if (isMounted) {
+          const labels = statType === "oy" ? t.monthLabels : t.weekLabels;
+          setChartStats(labels.map(l => ({ label: l, value: 0, realVal: 0, active: false })));
+        }
       }
     };
 
     fetchRealStatistics();
-  }, [year, month, statType, userId, lang, monthsUz, t.monthLabels, t.weekLabels]);
+    return () => { isMounted = false; };
+  }, [year, month, statType, userId, lang, monthsUz]); 
 
   const handleOpenModal = (data, type) => {
     setModalData(data);
@@ -316,15 +341,13 @@ export default function HomeTab({
       </div>
 
       <div className="white-content-body">
-        {/* ==========================================================================
-           🚀 4 TALIK SIDEBAR NAVIGATSIYA BLOKI (REKLAMA BANNERLARI TEPASIDA)
-           ========================================================================== */}
+        {/* 4 Talik Navigatsiya bloki */}
         <div className="home-embedded-sidebar" style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "10px",
           marginTop: "4px",
-          marginBottom: "20px",
+          marginBottom: "10px", 
           background: "#ffffff",
           padding: "12px",
           borderRadius: "16px",
@@ -380,7 +403,54 @@ export default function HomeTab({
           </button>
         </div>
 
-        {/* FAOL AKSIYALAR (BANNERLAR) */}
+        {/* BIZNING DO'KONIMIZ TUGMASI */}
+        <div style={{ padding: "0 4px", marginBottom: "20px" }}>
+          <button 
+            onClick={() => setIsShopsOpen(true)}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
+              color: "#ffffff",
+              border: "none",
+              padding: "14px 20px",
+              borderRadius: "16px",
+              cursor: "pointer",
+              boxShadow: "0 6px 16px rgba(16, 185, 129, 0.25)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.98)"}
+            onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}>
+              <div style={{
+                background: "rgba(255, 255, 255, 0.2)",
+                padding: "10px",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <FaStore size={20} />
+              </div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "15px", fontWeight: "700", letterSpacing: "0.5px" }}>{t.ourShops}</h4>
+                <p style={{ margin: "2px 0 0 0", fontSize: "11px", opacity: 0.9 }}>{t.ourShopsDesc}</p>
+              </div>
+            </div>
+            <span style={{
+              fontSize: "18px",
+              fontWeight: "bold",
+              background: "rgba(255, 255, 255, 0.15)",
+              padding: "4px 12px",
+              borderRadius: "30px"
+            }}>→</span>
+          </button>
+        </div>
+
+        {/* FAOL AKSIYALAR */}
         <h3 className="section-title">{t.activeCampaigns}</h3>
         <div className="promo-banners-container">
           {campaigns.length > 0 ? (
@@ -494,7 +564,102 @@ export default function HomeTab({
         </div>
       </div>
 
-      {/* DINAMIK MODAL */}
+      {/* ==========================================================================
+          🗺 MODAL - DO'KON JOYLASHUVI (YANDEX XARITA LINKI BILAN)
+          ========================================================================== */}
+      {isShopsOpen && (
+        <div className="home-modal-overlay" onClick={() => setIsShopsOpen(false)} style={{ zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="home-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px", width: "90%", borderRadius: "24px", overflow: "hidden", padding: 0 }}>
+            
+            {/* Modal Sarlavhasi (Header) */}
+            <div style={{
+              background: "#f1f5f9",
+              padding: "18px 24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #e2e8f0"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <FaStore style={{ color: "#10b981", fontSize: "20px" }} />
+                <span style={{ fontWeight: "700", color: "#1e293b", fontSize: "16px" }}>{t.ourShops}</span>
+              </div>
+              <button onClick={() => setIsShopsOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b" }}>
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Modal Tanasi */}
+            <div style={{ padding: "24px", background: "#f8fafc", textAlign: "center" }}>
+              
+              <div style={{
+                background: "#ffffff",
+                borderRadius: "20px",
+                padding: "24px 16px",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
+                border: "1px solid #e2e8f0",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "16px"
+              }}>
+                <div style={{
+                  background: "#e0f2fe",
+                  color: "#0284c7",
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <FaMapMarkerAlt size={26} />
+                </div>
+
+                <div>
+                  <h4 style={{ margin: "0 0 6px 0", fontSize: "16px", color: "#0f172a", fontWeight: "700" }}>
+                    Climate House
+                  </h4>
+                  <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: "1.4" }}>
+                    Samarqand shahri, Cho'lpon ko'chasi
+                  </p>
+                </div>
+
+                {/* Yandex Xaritaga yo'naltiruvchi chiroyli tugma */}
+                <a 
+                  href="https://yandex.uz/maps/org/climate_house/222102114104/?ll=66.941871%2C39.678287&z=16" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    width: "100%",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    color: "#ffffff",
+                    textDecoration: "none",
+                    padding: "12px 20px",
+                    borderRadius: "14px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
+                    transition: "transform 0.1s ease"
+                  }}
+                  onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.97)"}
+                  onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+                >
+                  <FaMapMarkerAlt />
+                  {t.openMapBtn}
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DINAMIK MODAL (AKSIYA VA MASLAHATLAR UCHUN) */}
       {modalData && (
         <div className="home-modal-overlay" onClick={() => { setModalData(null); setModalType(""); }}>
           <div className="home-modal-content" onClick={(e) => e.stopPropagation()}>
