@@ -214,7 +214,7 @@ export default function Register() {
             <button className="btn-submit" onClick={handleStepOneNext}>
               Keyingi
             </button>
-            <p className="login-link" onClick={() => navigate("/login")} style={{textAlign: "center", marginTop: "15px", cursor: "pointer", color: "#007bff"}}>
+            <p style={{textAlign: "center", marginTop: "15px", cursor: "pointer", color: "#007bff", border: "1px solid #007bff", padding: "8px 16px", borderRadius: "10px"}} onClick={() => navigate("/login")}>
               Sizda allaqachon akkaunt bormi? Kirish
             </p>
           </div>

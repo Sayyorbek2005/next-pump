@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiArrowLeft, FiGrid, FiPackage, FiImage, FiMapPin, FiPhone } from "react-icons/fi";
+import { FiArrowLeft, FiGrid, FiPackage, FiMapPin, FiPhone } from "react-icons/fi";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "./katalog.css";
