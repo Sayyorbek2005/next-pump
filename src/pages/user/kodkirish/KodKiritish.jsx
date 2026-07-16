@@ -185,9 +185,10 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
       {/* ⬅️ NAVIGATSIYA ORQAGA QAYTISH TUGMASI */}
       <div className="code-top-nav">
         <button className="code-back-btn" onClick={onBack}>
-          <FaArrowLeft /> {t.backBtn}
+          <FaArrowLeft /> {t.backBtn} 
         </button>
       </div>
+        <br />
 
       <div className="code-card-header">
         <div className="header-icon-box"><FaHashtag /></div>

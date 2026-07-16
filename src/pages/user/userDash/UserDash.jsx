@@ -5,12 +5,12 @@ import { supabase } from "../../../supabase/client";
 import { FaExclamationTriangle } from "react-icons/fa";
 
 import Header from "../header/Header"; 
-import Sidebar from "../sidebar/Sidebar"; // 👈 Sidebar komponenti import qilindi
+import Sidebar from "../sidebar/Sidebar"; 
 import HomeTab from "../home/Home";
 import CodeTab from "../kodkirish/KodKiritish";
 import SettingsTab from "../setting/Setting";
 import UserMagazin from "../magazine/Magazine"; 
-import UserKatalog from "../../admin/katalog/Katalog"; 
+import UserKatalog from "../../admin/katalog/Katalog"; // 👈 Bu o'sha biz yozgan KatalogTab komponenti bo'lishi kerak
 
 import "./userDash.css";
 
@@ -46,13 +46,9 @@ export default function UserDash() {
   const [lang, setLang] = useState(localStorage.getItem("app_lang") || "uz");
   const navigate = useNavigate();
 
+  // 🔄 Tabni xavfsiz va to'g'ri o'zgartirish funksiyasi
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
-    setSelectedCategory(null);
-  };
-
-  const setSelectedCategory = (val) => {
-    // Agar katalog ichida kategoriya tanlash kerak bo'lsa, xatolik bermasligi uchun qoldirildi
   };
 
   const checkActiveCampaign = useCallback(async () => {
@@ -365,7 +361,7 @@ export default function UserDash() {
         onProfileClick={() => handleTabChange("settings")} 
       />
 
-      {/* 🧭 SIDEBAR KOMPONENTI INTEGRATSIYA QILINDI */}
+      {/* 🧭 SIDEBAR KOMPONENTI */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={handleTabChange} 
@@ -411,10 +407,8 @@ export default function UserDash() {
 
           {activeTab === "katalog" && (
             <UserKatalog 
-              selectedCategory={null} 
-              setSelectedCategory={setSelectedCategory} 
               lang={lang}
-              onBack={() => setActiveTab("home")} 
+              onBack={() => handleTabChange("home")} 
             />
           )}
 
@@ -423,7 +417,7 @@ export default function UserDash() {
               currentUser={currentUser} 
               fetchUserData={() => fetchUserData(currentUser, year, month, statType)} 
               lang={lang}
-              onBack={() => setActiveTab("home")} 
+              onBack={() => handleTabChange("home")} 
             />
           )}
 
@@ -444,9 +438,7 @@ export default function UserDash() {
               setShowLogoutModal={setShowLogoutModal} 
               lang={lang}
               changeLanguage={changeLanguage}
-              onBack={() => {
-                handleTabChange("home");
-              }}
+              onBack={() => handleTabChange("home")} 
             />
           )}
         </section>

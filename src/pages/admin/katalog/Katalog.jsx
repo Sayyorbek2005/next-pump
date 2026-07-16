@@ -39,6 +39,8 @@ import imgIntelligent from "./assets2/imageone.png";
 import imgGRD15 from "./assets2/imagetwo.png";         
 import imgNewStar from "./assets2/imagethree.png";         
 import imgHorizontal from "./assets2/imagefoue.png";   
+import { useNavigate } from "react-router-dom";
+import { FaArrowRight } from "react-icons/fa";
 
 // === Leaflet marker ikonkalarini sozlash ===
 // ESLint xatosini bartaraf etish uchun import qilingan mahalliy rasmlar shu yerda qo'llanildi
@@ -478,6 +480,10 @@ export default function KatalogTab() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+
+  const navigate = useNavigate();
+
+
   const filteredProducts = MOCK_PRODUCTS.filter(
     (prod) => selectedCategory && prod.category_id === selectedCategory.id
   );
@@ -490,7 +496,8 @@ export default function KatalogTab() {
           <button className="katalog-back-btn" onClick={() => setSelectedProduct(null)}>
             <FiArrowLeft size={16} /> Orqaga
           </button>
-          <h2>Mahsulot xususiyatlari</h2>
+          <h2>Mahsulot xususiyatlari</h2> mollari
+          
         </div>
 
         <div className="product-detail-container">
@@ -529,15 +536,15 @@ export default function KatalogTab() {
   if (selectedCategory) {
     return (
       <div className="katalog-light-wrapper">
-        <div className="katalog-inner-header">
           <button className="katalog-back-btn" onClick={() => setSelectedCategory(null)}>
             <FiArrowLeft size={16} /> Orqaga
           </button>
+       <br />
           <div className="inner-title-box">
             <h2>{selectedCategory.name_uz}</h2>
             <span className="badge">{filteredProducts.length} ta mahsulot</span>
           </div>
-        </div>
+          <br />
 
         {filteredProducts.length === 0 ? (
           <div className="no-data-box">
@@ -573,20 +580,26 @@ export default function KatalogTab() {
   // --- REJIM 1: ASOSIY KATALOGLAR REJIMI ---
   return (
     <div className="katalog-light-wrapper">
+       <button className="katalog-back-btn" onClick={() => navigate('/')}>
+                  <FiArrowLeft size={16} /> Asosiy sahifaga qaytish
+                </button> 
+                <br />
       <div className="katalog-light-banner">
         <div className="banner-left-info">
           <div className="banner-icon-title">
             <FiGrid className="main-grid-icon" />
-            <h2>Xo'jalik Mollari Katalogi</h2>
+            <h2>Xo'jalik mollari katalogi</h2>
           </div>
-          <p>Kerakli toifani tanlang va mahsulotlar bilan tanishing</p>
+          <p style={{ fontSize: "16px", color: "#64748b" }}>
+            Kerakli toifani tanlang va mahsulotlar bilan tanishing
+          </p>
         </div>
       </div>
 
       <div className="katalog-map-section" style={{ margin: "20px 0 30px 0", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
         <div style={{ padding: "12px 16px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
-          <FiMapPin style={{ color: "#3b82f6" }} />
-          <strong style={{ fontSize: "14px", color: "#1e293b" }}>Bizning do'konlarimiz xaritasi</strong>
+          <FiMapPin style={{ fontSize: "20px", color: "#3b82f6" }} />
+          <strong style={{ fontSize: "18px", color: "#1e293b" }}>Bizning do'konlarimiz xaritasi</strong>
         </div>
         
         <div style={{ height: "320px", width: "100%" }}>
@@ -619,24 +632,20 @@ export default function KatalogTab() {
       </div>
 
       <div className="section-divider">
-        <h3>Mavjud Kataloglar</h3>
+        <h2 style={{ fontSize: "24px", color: "#3b62e6" }}>Mavjud Kataloglar</h2>
         <span className="badge-count">{MOCK_CATEGORIES.length} toifa</span>
       </div>
 
       <div className="categories-light-grid">
         {MOCK_CATEGORIES.map((cat) => (
           <div key={cat.id} className="category-light-card" onClick={() => setSelectedCategory(cat)}>
-            <div className="card-img-top">
-              <div className="no-image-placeholder">
-                <FiImage size={28} />
-              </div>
-            </div>
-            <div className="card-body-content">
-              <h3>{cat.name_uz}</h3>
-              <div className="card-footer-action">
-                <span>Tovarlarni ko'rish</span>
-                <span className="arrow-icon">→</span>
-              </div>
+           
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px" }}>
+              
+              <h2>{cat.name_uz}</h2>
+               <FaArrowRight style={{ fontSize: "20px" }} />
+
+           
             </div>
           </div>
         ))}

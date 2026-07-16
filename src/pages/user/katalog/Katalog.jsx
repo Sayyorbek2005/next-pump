@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { FiArrowLeft, FiGrid, FiPackage, FiImage, FiMapPin, FiPhone } from "react-icons/fi";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -40,25 +40,25 @@ import imgGRD15 from "./assets2/imagetwo.png";
 import imgNewStar from "./assets2/imagethree.png";         
 import imgHorizontal from "./assets2/imagefoue.png";   
 
-// === Leaflet marker ikonkalarini sozlash ===
-// Ba'zida React loyihalarda mahalliy marker rasmi yuklanmasa, xato bermasligi uchun ochiq manba URL'ga yo'naltirildi
-let DefaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+// === Leaflet marker ikonkalarini xavfsiz sozlash ===
+const DefaultIcon = L.icon({
+  iconUrl: icon || "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: iconShadow || "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// === 1. DO'KONLAR COORDINATALARI (Rasmga qarab to'g'rilandi) ===
+// === 1. DO'KONLAR COORDINATALARI ===
 const MOCK_SHOPS = [
   {
     id: 1,
     name: "Nasoslar ombori (Samarqand filiali)",
     address: "Samarqand sh., Gagarin ko'chasi",
-    lat: 39.6542, // Rasmda ko'rsatilgan Gagarin ko'chasiga mos keluvchi haqiqiy koordinata
+    lat: 39.6542, 
     lng: 66.9287, 
-    phone: "+998 93 987-55-43" // Rasmda ko'rsatilgan telefon raqami
+    phone: "+998 93 987-55-43" 
   } 
 ];
 
@@ -69,7 +69,6 @@ const MOCK_CATEGORIES = [
 
 // === 3. MAHSULOTLAR RO'YXATI ===
 const MOCK_PRODUCTS = [
-  // 1. QB (Вихревой)
   {
     id: 1,
     category_id: 1,
@@ -84,7 +83,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "32" }
     ]
   },
-  // 2. CPm (Центробежный)
   {
     id: 2,
     category_id: 1,
@@ -99,7 +97,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "22" }
     ]
   },
-  // 3. PW (Периферийный)
   {
     id: 3,
     category_id: 1,
@@ -114,7 +111,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "24" }
     ]
   },
-  // 4. PWE (Периферийный с сухой защитой)
   {
     id: 4,
     category_id: 1,
@@ -129,7 +125,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "24" }
     ]
   },
-  // 5. PWF (Периферийный с suhoyi datchik - Adaptiv)
   {
     id: 5,
     category_id: 1,
@@ -144,7 +139,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "24" }
     ]
   },
-  // 6. QDX (Погружной)
   {
     id: 6,
     category_id: 1,
@@ -159,7 +153,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "13" }
     ]
   },
-  // 7. TCM5 (Поверхностный)
   {
     id: 7,
     category_id: 1,
@@ -174,7 +167,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "31" }
     ]
   },
-  // 8. TCH(m) (Поверхностный)
   {
     id: 8,
     category_id: 1,
@@ -189,7 +181,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "20" }
     ]
   },
-  // 9. JET (Самовсасывающий)
   {
     id: 9,
     category_id: 1,
@@ -204,7 +195,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "38" }
     ]
   },
-  // 10. THF (Центробежный)
   {
     id: 10,
     category_id: 1,
@@ -219,7 +209,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "20" }
     ]
   },
-  // 11. 2TCP25 (Центробежный двухколесный)
   {
     id: 11,
     category_id: 1,
@@ -234,7 +223,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "47" }
     ]
   },
-  // 12. 50WFD11 (Канализационный)
   {
     id: 12,
     category_id: 1,
@@ -249,7 +237,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "15" }
     ]
   },
-  // 13. QFD (Погружной)
   {
     id: 13,
     category_id: 1,
@@ -264,7 +251,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "18" }
     ]
   },
-  // 14. ATJSW (Насосная станция)
   {
     id: 14,
     category_id: 1,
@@ -279,7 +265,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "58" }
     ]
   },
-  // 15. STAR (Частотный с фланцем)
   {
     id: 15,
     category_id: 1,
@@ -294,7 +279,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "12" }
     ]
   },
-  // 16. SGJ (Самовсасывающий нерж.)
   {
     id: 16,
     category_id: 1,
@@ -309,7 +293,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "43" }
     ]
   },
-  // 17. GS (Дренажный)
   {
     id: 17,
     category_id: 1,
@@ -324,7 +307,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "5.5" }
     ]
   },
-  // 18. CHLFT(T) (Для горячей воды)
   {
     id: 18,
     category_id: 1,
@@ -339,7 +321,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "53" }
     ]
   },
-  // 19. CHM (Для горячей воды)
   {
     id: 19,
     category_id: 1,
@@ -354,7 +335,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "38" }
     ]
   },
-  // 20. TW (Периферийный)
   {
     id: 20,
     category_id: 1,
@@ -369,7 +349,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "42" }
     ]
   },
-  // 21. GRD (Рециркуляция Латунь)
   {
     id: 21,
     category_id: 1,
@@ -384,7 +363,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "1.5" }
     ]
   },
-  // 22. STAR (Циркуляционный частотный)
   {
     id: 22,
     category_id: 1,
@@ -399,7 +377,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi (Подъём, m)", value: "6" }
     ]
   },
-  // 23. Пресс-контроль PM-01
   {
     id: 23,
     category_id: 1,
@@ -414,8 +391,6 @@ const MOCK_PRODUCTS = [
       { key: "Balandligi", value: "Datchik" }
     ]
   },
-  
-  // === TO'RTTA YANGI MAHSULOT ===
   {
     id: 24,
     category_id: 1,
@@ -474,22 +449,20 @@ const MOCK_PRODUCTS = [
   }
 ];
 
-export default function KatalogTab() {
+export default function KatalogTab({ onBack = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const filteredProducts = MOCK_PRODUCTS.filter(
-    (prod) => selectedCategory && prod.category_id === selectedCategory.id
-  );
+  const filteredProducts = useMemo(() => {
+    if (!selectedCategory) return [];
+    return MOCK_PRODUCTS.filter((prod) => prod.category_id === selectedCategory.id);
+  }, [selectedCategory]);
 
   // --- REJIM 3: MAHSULOT DETALI ---
   if (selectedProduct) {
     return (
       <div className="katalog-light-wrapper">
         <div className="katalog-inner-header">
-          <button className="katalog-back-btn" onClick={() => setSelectedProduct(null)}>
-            <FiArrowLeft size={16} /> Orqaga
-          </button>
           <h2>Mahsulot xususiyatlari</h2>
         </div>
 
@@ -573,6 +546,32 @@ export default function KatalogTab() {
   // --- REJIM 1: ASOSIY KATALOGLAR REJIMI ---
   return (
     <div className="katalog-light-wrapper">
+      
+      {/* ⬅️ NAVIGATSIYA ORQAGA (ASOSIY SAHIFAGA) QAYTISH TUGMASI */}
+      {onBack && (
+        <div style={{ marginBottom: "15px", display: "flex", justifyContent: "flex-start" }}>
+          <button 
+            className="katalog-back-btn main-home-back-btn" 
+            onClick={onBack}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 16px",
+              background: "#ffffff",
+              border: "1px solid #cbd5e1",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: "600",
+              color: "#334155",
+              transition: "all 0.2s ease"
+            }}
+          >
+            <FiArrowLeft size={18} /> Asosiy sahifaga qaytish
+          </button>
+        </div>
+      )}
+
       <div className="katalog-light-banner">
         <div className="banner-left-info">
           <div className="banner-icon-title">
@@ -583,17 +582,18 @@ export default function KatalogTab() {
         </div>
       </div>
 
-      <div className="katalog-map-section" style={{ margin: "20px 0 30px 0", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-        <div style={{ padding: "12px 16px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
-          <FiMapPin style={{ color: "#3b82f6" }} />
-          <strong style={{ fontSize: "14px", color: "#1e293b" }}>Bizning do'konlarimiz xaritasi</strong>
+      <div className="katalog-map-section">
+        <div className="map-section-header">
+          <FiMapPin className="map-pin-icon" />
+          <strong>Bizning do'konlarimiz xaritasi</strong>
         </div>
         
-        <div style={{ height: "320px", width: "100%" }}>
+        <div className="map-container-wrapper">
           <MapContainer 
-            center={[39.6542, 66.9287]} // Xarita ochilishi bilan to'g'ri nuqtani ko'rsatadi
+            center={[39.6542, 66.9287]} 
             zoom={14} 
             style={{ width: "100%", height: "100%" }}
+            scrollWheelZoom={false}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -602,11 +602,11 @@ export default function KatalogTab() {
             {MOCK_SHOPS.map((shop) => (
               <Marker key={shop.id} position={[shop.lat, shop.lng]}>
                 <Popup>
-                  <div style={{ fontFamily: "sans-serif", padding: "5px" }}>
-                    <h4 style={{ margin: "0 0 5px 0", color: "#1e293b", fontSize: "14px", fontWeight: "bold" }}>{shop.name}</h4>
-                    <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#64748b" }}>{shop.address}</p>
+                  <div className="map-popup-content">
+                    <h4>{shop.name}</h4>
+                    <p className="shop-address">{shop.address}</p>
                     {shop.phone && (
-                      <p style={{ margin: "0", fontSize: "12px", color: "#2563eb", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600" }}>
+                      <p className="shop-phone">
                         <FiPhone size={12} /> {shop.phone}
                       </p>
                     )}
@@ -627,9 +627,13 @@ export default function KatalogTab() {
         {MOCK_CATEGORIES.map((cat) => (
           <div key={cat.id} className="category-light-card" onClick={() => setSelectedCategory(cat)}>
             <div className="card-img-top">
-              <div className="no-image-placeholder">
-                <FiImage size={28} />
-              </div>
+              {cat.image_url ? (
+                <img src={cat.image_url} alt={cat.name_uz} className="category-img" />
+              ) : (
+                <div className="no-image-placeholder">
+                  <FiImage size={28} />
+                </div>
+              )}
             </div>
             <div className="card-body-content">
               <h3>{cat.name_uz}</h3>
