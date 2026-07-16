@@ -290,7 +290,8 @@ export default function HomeTab({
 
     fetchRealStatistics();
     return () => { isMounted = false; };
-  }, [year, month, statType, userId, lang, monthsUz]); 
+  },);
+  // ? [year, month, statType, userId, lang, monthsUz] 
 
   const handleOpenModal = (data, type) => {
     setModalData(data);
