@@ -1,13 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700;800&display=swap');
 
+/* --- 🎨 ASOSIY STILLAR --- */
 .generator-wrapper {
   font-family: 'Inter', sans-serif;
   padding: 24px;
   background-color: #f8fafc;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
-/* Control Panel */
+/* Global box-sizing sozlamasi (elementlar ekrandan chiqib ketmasligi uchun) */
+.generator-wrapper * {
+  box-sizing: border-box;
+}
+
+/* --- 🎛 BOSHQARUV PANELI (HEADER CARD) --- */
 .generator-header-card {
   display: flex;
   justify-content: space-between;
@@ -65,7 +72,6 @@
   border-radius: 12px;
   padding: 0 6px 0 14px;
   height: 46px;
-  box-sizing: border-box;
   transition: border-color 0.2s ease;
 }
 
@@ -107,6 +113,7 @@
   gap: 8px;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .main-generate-btn:hover {
@@ -124,14 +131,14 @@
   margin-bottom: 18px;
 }
 
-/* Grids Layout */
+/* --- 📐 SETKA MAKETI (GRID LAYOUT) --- */
 .groups-grid-layout {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 20px;
 }
 
-/* Guruh Kartalari */
+/* --- 📦 PARTIYA KARTALARI --- */
 .group-batch-card {
   background-color: #ffffff;
   border-radius: 16px;
@@ -140,7 +147,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
   transition: transform 0.2s ease;
 }
 
@@ -149,6 +156,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 14px;
+  gap: 10px;
 }
 
 .batch-badge {
@@ -179,11 +187,13 @@
   gap: 6px;
 }
 
-.batch-action-buttons button, .btn-action-delete {
+.batch-action-buttons button, 
+.btn-action-delete {
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
+  align-items: center;
   transition: all 0.2s ease;
 }
 
@@ -207,9 +217,9 @@
   background-color: #f1f5f9;
 }
 
-/* 🌟 YANGI: Pauza / Play Tugmalari Stillari */
+/* Pauza / Play Tugmalari Stillari */
 .btn-action-pause {
-  background-color: #fef3c7; /* Sariq rang */
+  background-color: #fef3c7;
   color: #d97706;
   border: 1px solid #fde68a;
 }
@@ -219,7 +229,7 @@
 }
 
 .btn-active-play {
-  background-color: #dcfce7; /* Play holatida yashil rang */
+  background-color: #dcfce7;
   color: #15803d;
   border: 1px solid #bbf7d0;
 }
@@ -228,7 +238,7 @@
   background-color: #bbf7d0;
 }
 
-/* Scroll va Ro'yxat */
+/* --- 📜 KODLAR RO'YXATI VA SCROLL --- */
 .batch-codes-scroll {
   max-height: 160px;
   overflow-y: auto;
@@ -303,9 +313,9 @@
   font-weight: 500;
 }
 
-/* 🌟 YANGI: Pauza holatidagi partiya va kod stillari */
+/* --- ⏸ PAUZA HOLATIDAGI KARTALAR --- */
 .paused-batch-card {
-  background-color: #fafaf9; /* Kulrang tus */
+  background-color: #fafaf9;
   border-color: #e7e5e4;
   opacity: 0.95;
 }
@@ -333,7 +343,7 @@
   color: #78716c;
 }
 
-/* 🌟 YANGI LIGHT MODE: Ishlatilgan kodlar maxsus kartasi */
+/* --- 🔴 ISHLATILGAN KODLAR KARTASI --- */
 .used-codes-special-card {
   background-color: #f1f5f9 !important;
   border: 1px solid #e2e8f0 !important;
@@ -393,7 +403,7 @@
   font-size: 15px;
 }
 
-/* Modallar */
+/* --- 🛑 TASDIQLASH MODALLARI --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -494,10 +504,12 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ==========================================================================
+   📱 MOBIL MOSLASHUVCHANLIK (RESPONSIVE DESIGN) MUKAMMAL O'ZGARISHLARI
+   ========================================================================== */
 
-/* --- 📱 MOBIL MOSLASHUVCHANLIK (RESPONSIVE DESIGN) QISMI --- */
+/* --- 📱 PLANSHEТ VA O'RTA SMARTFONLAR (576px gacha) --- */
 @media (max-width: 576px) {
-  /* Katta bosh kartani ustun shakliga keltiramiz */
   .generator-header-card {
     flex-direction: column;
     align-items: stretch;
@@ -510,12 +522,10 @@
     align-items: center;
   }
 
-  /* Kichik ekranda sarlavha matnining hajmi */
   .header-info h3 {
     font-size: 16px;
   }
 
-  /* Tugma va input guruhini to'liq kenglikda qilish */
   .generator-controls {
     flex-direction: column;
     align-items: stretch;
@@ -523,7 +533,6 @@
     gap: 10px;
   }
 
-  /* Input blokini tekislash */
   .custom-input-group {
     width: 100%;
     justify-content: space-between;
@@ -534,9 +543,95 @@
     text-align: right;
   }
 
-  /* "Создать Код" tugmasini ham chiroyli to'liq kenglikda qilish */
   .main-generate-btn {
     width: 100%;
     justify-content: center;
+  }
+  
+  .groups-grid-layout {
+    grid-template-columns: 1fr; /* Kichik ekranda kartalar faqat 1 ustun bo'ladi */
+  }
+}
+
+/* --- 🌟 O'TA KICHIK EKRANLAR (300px gacha) MOSLASHUV OYNASI --- */
+@media (max-width: 380px) {
+  .generator-wrapper {
+    padding: 12px; /* Ekran qisilmasligi uchun asosiy chekka joy kamaytirildi */
+  }
+
+  .header-info {
+    flex-direction: column; /* Ikonka va matn ustma-ust joylashadi */
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-icon-container {
+    padding: 10px;
+  }
+
+  .group-batch-card {
+    padding: 14px; /* Kartaning ichki bo'shlig'i o'lchami ixchamlashtirildi */
+  }
+
+  .batch-card-header {
+    flex-direction: column; /* Sarlavha va boshqaruv tugmalari bloklari ustma-ust tushadi */
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  /* Amal tugmalari (Pauza, O'chirish, Nusxalash) ekran eni bo'yicha teng cho'ziladi */
+  .batch-action-buttons {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .batch-action-buttons button, 
+  .btn-action-delete {
+    flex: 1; 
+    justify-content: center;
+    padding: 10px 8px;
+  }
+
+  .batch-codes-scroll li {
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .code-item-left {
+    gap: 6px;
+  }
+
+  .code-item-left span {
+    font-size: 13px;
+  }
+
+  .status-pill {
+    font-size: 10px;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  .batch-card-footer {
+    font-size: 11px;
+    flex-direction: column; /* Jami miqdor yozuvlari ham sig'ishi uchun ustun qilindi */
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  /* Modal oynasining 300px ekranlarda chiroyli turishi */
+  .modal-container {
+    padding: 20px 14px;
+    width: 95%;
+  }
+
+  .modal-buttons-group {
+    flex-direction: column; /* Tasdiqlash / Bekor qilish tugmalari ustma-ust joylashadi */
+    gap: 8px;
+  }
+  
+  .modal-confirm-btn, 
+  .modal-cancel-btn {
+    width: 100%;
   }
 }

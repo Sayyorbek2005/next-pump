@@ -2,25 +2,29 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../supabase/client";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import bcrypt from "bcryptjs"; // Parolni xavfsiz solishtirish uchun
 import "./login.css";
 
 export default function Login() {
   const [phone, setPhone] = useState("+998 ");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true); // Sahifa yuklanganda tekshiruv tugaguncha true bo'ladi
   const navigate = useNavigate();
 
   useEffect(() => {
     const autoLoginWithTelegram = async () => {
+      // 1. Telegram Web App obyekti va foydalanuvchi ma'lumotlarini olamiz
       const tg = window.Telegram?.WebApp;
       const tgUser = tg?.initDataUnsafe?.user;
 
+      // Agar foydalanuvchi haqiqatdan ham Telegram orqali kirgan bo'lsa
       if (tgUser && tgUser.id) {
         try {
+          // 2. Supabase-dan Telegram ID bo'yicha foydalanuvchini qidiramiz
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
-            .eq("telegram_id", String(tgUser.id)) 
+            .eq("telegram_id", String(tgUser.id)) // Bot orqali saqlangan telegram_id bilan solishtiradi
             .maybeSingle();
 
           if (error) {
@@ -29,6 +33,7 @@ export default function Login() {
             return;
           }
 
+          // 3. Agar foydalanuvchi bazada bor bo'lsa va to'liq ro'yxatdan o'tgan bo'lsa, uni avtomatik kiritamiz
           if (data && data.region && data.job) {
             localStorage.setItem("user", JSON.stringify(data));
             toast.success("Xush kelibsiz!");
@@ -44,6 +49,8 @@ export default function Login() {
           console.error("Avto-login xatoligi yuz berdi:", err);
         }
       }
+      
+      // Agar Telegram ID topilmasa yoki xatolik bo'lsa, yuklanishni o'chiramiz va login formasini ko'rsatamiz
       setIsLoading(false);
     };
 
@@ -82,15 +89,19 @@ export default function Login() {
       return;
     }
 
+    if (password.length < 4) {
+      toast.error("Parol kamida 4 ta belgi bo‘lishi kerak.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // To'g'ridan-to'g'ri telefon raqami va parolni solishtirib qidiramiz
+      // Faqat telefon raqami bo'yicha profilni qidiramiz (parolni SQL ichida solishtirmaymiz)
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("phone", cleanPhone)
-        .eq("password", password.trim()) 
         .maybeSingle();
 
       if (error) {
@@ -103,6 +114,16 @@ export default function Login() {
         return;
       }
 
+      // 🔐 BCRYPT ORQALI PAROLNI SOLISHTIRISH
+      // Kiritilgan oddiy parol bilan bazadagi xeshni (shifrlangan parolni) tekshiradi
+      const isPasswordCorrect = await bcrypt.compare(password, data.password);
+
+      if (!isPasswordCorrect) {
+        toast.error("Telefon yoki parol noto‘g‘ri!");
+        return;
+      }
+
+      // Agar birinchi marta login qilayotgan bo'lsa va Telegram ID hali bog'lanmagan bo'lsa:
       const tg = window.Telegram?.WebApp;
       const tgUser = tg?.initDataUnsafe?.user;
       if (tgUser && tgUser.id && !data.telegram_id) {
@@ -128,6 +149,7 @@ export default function Login() {
     }
   };
 
+  // Tekshiruv ketayotganda foydalanuvchiga login formasi ko'rinib turmaydi
   if (isLoading) {
     return (
       <div className="auth-page-wrapper">

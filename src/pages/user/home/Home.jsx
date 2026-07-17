@@ -52,11 +52,14 @@ const translations = {
     navCode: "Kod kiritish",
     navCatalog: "Katalog",
     navShop: "Sovg‘alar",
-    ourShops: "Bizning do'konimiz",
-    ourShopsDesc: "Filialimiz joylashuvi va xaritasi",
+    ourShops: "Bizning mahsulotlar qayerda bor?",
+    ourShopsDesc: "Filiallarimiz joylashuvi va xaritasi",
     closeBtn: "Yopish",
-    mapSection: "Do'konimiz joylashuvi (Yandex Xarita)",
-    openMapBtn: "Xaritada ochish"
+    mapSection: "Do'konlarimiz joylashuvi",
+    openMapBtn: "Xaritada ochish",
+    noShops: "Hozircha do'konlar joylashuvi kiritilmagan.",
+    viewFullStat: "To'liq statistikani ko'rish",
+    statTitleModal: "Sizning statistikangiz"
   },
   ru: {
     place: "-е место",
@@ -68,7 +71,7 @@ const translations = {
     adminTips: "Советы от Админа",
     noTips: "Советы отсутствуют.",
     yearLabel: "Год",
-    monthLabel: "Месяц", // Fixed: "Month" -> "Месяц"
+    monthLabel: "Месяц",
     collectedPoints: "Собранные баллы",
     points: "балл",
     activityStat: "Статистика активности",
@@ -89,18 +92,20 @@ const translations = {
     navCode: "Ввод кода",
     navCatalog: "Каталог",
     navShop: "Призы",
-    ourShops: "Наш магазин",
-    ourShopsDesc: "Расположение филиала и карта",
+    ourShops: "Где найти нашу продукцию?",
+    ourShopsDesc: "Расположение филиалов и карта",
     closeBtn: "Закрыть",
-    mapSection: "Расположение магазина (Яндекс Карта)",
-    openMapBtn: "Открыть на карте"
+    mapSection: "Расположение магазинов",
+    openMapBtn: "Открыть на карте",
+    noShops: "Адреса магазинов еще не добавлены.",
+    viewFullStat: "Посмотреть полную статистику",
+    statTitleModal: "Ваша статистика"
   }
 };
 
 const monthsUzDefault = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
 const monthsRu = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
-// 🎛 Static Inline uslublarni komponent tashqarisiga olib chiqdik (Ishlash unumdorligini oshirish uchun)
 const navContainerStyle = {
   display: "grid",
   gridTemplateColumns: "repeat(4, 1fr)",
@@ -151,12 +156,35 @@ export default function HomeTab({
   const [chartStats, setChartStats] = useState([]);
   const [monthlyTotalCodes, setMonthlyTotalCodes] = useState(0);
   const [monthlyAverageBonus, setMonthlyAverageBonus] = useState(0);
+  
   const [isShopsOpen, setIsShopsOpen] = useState(false);
+  const [shopsList, setShopsList] = useState([]);
+  
+  // 🆕 STATISTIKA MODALI UCHUN YANGI SHTAT
+  const [isStatOpen, setIsStatOpen] = useState(false);
 
   const t = translations[lang] || translations["uz"];
   const currentMonthsList = lang === "ru" ? monthsRu : monthsUz;
 
-  // 1. FAOL AKSIYALARNI YUKLASH
+  // DO'KONLARNI YUKLASH
+  useEffect(() => {
+    const fetchAllShops = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("shop_settings")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        if (data) setShopsList(data);
+      } catch (error) {
+        console.error("Do'konlarni yuklashda xatolik:", error);
+      }
+    };
+    fetchAllShops();
+  }, []);
+
+  // FAOL AKSIYALARNI YUKLASH
   useEffect(() => {
     let isMounted = true;
     const fetchCampaigns = async () => {
@@ -179,7 +207,7 @@ export default function HomeTab({
     return () => { isMounted = false; };
   }, []);
 
-  // 2. MASLAHATLAR VA YANGILIKLARNI YUKLASH
+  // MASLAHATLARNI YUKLASH
   useEffect(() => {
     let isMounted = true;
     const fetchNews = async () => {
@@ -199,7 +227,7 @@ export default function HomeTab({
     return () => { isMounted = false; };
   }, []);
 
-  // 3. DINAMIK FILTRLASH VA STATISTIKANI HISOBLASH
+  // DINAMIK FILTRLASH VA STATISTIKANI HISOBLASH
   useEffect(() => {
     let isMounted = true;
     const fetchRealStatistics = async () => {
@@ -313,7 +341,7 @@ export default function HomeTab({
 
     fetchRealStatistics();
     return () => { isMounted = false; };
-  }, [year, month, statType, userId, lang, monthsUz, t.monthLabels, t.weekLabels]); // Added missing dependencies to avoid Warnings
+  }, [year, month, statType, userId, lang, monthsUz, t.monthLabels, t.weekLabels]);
 
   const handleOpenModal = (data, type) => {
     setModalData(data);
@@ -364,43 +392,31 @@ export default function HomeTab({
       </div>
 
       <div className="white-content-body">
-        {/* 4 Talik Navigatsiya bloki */}
+        {/* Navigatsiya bloki */}
         <div className="home-embedded-sidebar" style={navContainerStyle}>
-          <button 
-            onClick={() => setActiveTab && setActiveTab("home")} 
-            style={activeNavButtonStyle}
-          >
+          <button onClick={() => setActiveTab && setActiveTab("home")} style={activeNavButtonStyle}>
             <FaHome size={18} />
             <span style={{ fontSize: "11px" }}>{t.navHome}</span>
           </button>
 
-          <button 
-            onClick={() => setActiveTab && setActiveTab("code")} 
-            style={inactiveNavButtonStyle}
-          >
+          <button onClick={() => setActiveTab && setActiveTab("code")} style={inactiveNavButtonStyle}>
             <FaKey size={18} style={{ color: "#2563eb" }} />
             <span style={{ fontSize: "11px" }}>{t.navCode}</span>
           </button>
 
-          <button 
-            onClick={() => setActiveTab && setActiveTab("katalog")} 
-            style={inactiveNavButtonStyle}
-          >
+          <button onClick={() => setActiveTab && setActiveTab("katalog")} style={inactiveNavButtonStyle}>
             <FaBookOpen size={18} style={{ color: "#059669" }} />
             <span style={{ fontSize: "11px" }}>{t.navCatalog}</span>
           </button>
 
-          <button 
-            onClick={() => setActiveTab && setActiveTab("magazin")} 
-            style={inactiveNavButtonStyle}
-          >
+          <button onClick={() => setActiveTab && setActiveTab("magazin")} style={inactiveNavButtonStyle}>
             <FaGift size={18} style={{ color: "#d97706" }} />
             <span style={{ fontSize: "11px" }}>{t.navShop}</span>
           </button>
         </div>
 
-        {/* BIZNING DO'KONIMIZ TUGMASI (Active scale effekti home.css dagi klass orqali berilishi tavsiya etiladi) */}
-        <div style={{ padding: "0 4px", marginBottom: "20px" }}>
+        {/* BIZNING MAHSULOTLAR QAYERDA BOR? TUGMASI */}
+        <div style={{ padding: "0 4px", marginBottom: "14px" }}>
           <button 
             onClick={() => setIsShopsOpen(true)}
             style={{
@@ -433,13 +449,45 @@ export default function HomeTab({
                 <p style={{ margin: "2px 0 0 0", fontSize: "11px", opacity: 0.9 }}>{t.ourShopsDesc}</p>
               </div>
             </div>
-            <span style={{
-              fontSize: "18px",
-              fontWeight: "bold",
-              background: "rgba(255, 255, 255, 0.15)",
-              padding: "4px 12px",
-              borderRadius: "30px"
-            }}>→</span>
+            <span style={{ fontSize: "18px", fontWeight: "bold", background: "rgba(255, 255, 255, 0.15)", padding: "4px 12px", borderRadius: "30px" }}>→</span>
+          </button>
+        </div>
+
+        {/* 🆕 TO'LIQ STATISTIKANI KO'RISH TUGMASI (Grafik o'rniga qo'yildi) */}
+        <div style={{ padding: "0 4px", marginBottom: "20px" }}>
+          <button 
+            onClick={() => setIsStatOpen(true)}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", 
+              color: "#ffffff",
+              border: "none",
+              padding: "14px 20px",
+              borderRadius: "16px",
+              cursor: "pointer",
+              boxShadow: "0 6px 16px rgba(37, 99, 235, 0.25)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}>
+              <div style={{
+                background: "rgba(255, 255, 255, 0.2)",
+                padding: "10px",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <FaChartBar size={20} />
+              </div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "15px", fontWeight: "700", letterSpacing: "0.5px" }}>{t.viewFullStat}</h4>
+                <p style={{ margin: "2px 0 0 0", fontSize: "11px", opacity: 0.9 }}>{t.chartAnalysis}</p>
+              </div>
+            </div>
+            <span style={{ fontSize: "18px", fontWeight: "bold", background: "rgba(255, 255, 255, 0.15)", padding: "4px 12px", borderRadius: "30px" }}>→</span>
           </button>
         </div>
 
@@ -483,165 +531,130 @@ export default function HomeTab({
             </div>
           )}
         </div>
-
-        {/* SANANI BELGILASH */}
-        <div className="filter-section">
-          <div className="filter-group">
-            <label className="filter-label">{t.yearLabel}</label>
-            <select value={year} onChange={(e) => setYear(e.target.value)} className="filter-select">
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label className="filter-label">{t.monthLabel}</label>
-            <select value={month} onChange={(e) => setMonth(e.target.value)} className="filter-select">
-              {currentMonthsList.map((m, idx) => (
-                <option key={idx} value={lang === "ru" ? monthsRu[idx] : monthsUz[idx]}>{m}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* BALLAR */}
-        <div className="total-score-box">
-          <span className="score-title">{t.collectedPoints} ({month} - {year})</span>
-          <div className="score-divider"></div>
-          <span className="score-number" style={{ color: "#2563eb" }}>{filteredBonus} {t.points}</span>
-        </div>
-
-        {/* GRAFIK */}
-        <div className="home-bottom-statistics">
-          <div className="stats-header-row">
-            <div className="stats-header-title">
-              <FaChartBar className="chart-icon-lead" />
-              <div>
-                <h3>{t.activityStat}</h3>
-                <p>{t.chartAnalysis}</p>
-              </div>
-            </div>
-            
-            <div className="stats-header-badge" style={{ padding: "2px 6px", background: "#f1f5f9" }}>
-              <select value={statType} onChange={(e) => setStatType(e.target.value)} style={{ border: "none", background: "none", fontSize: "12px", fontWeight: "600", color: "#475569", outline: "none", cursor: "pointer" }}>
-                <option value="kun">{t.statDaily}</option>
-                <option value="hafta">{t.statWeekly}</option>
-                <option value="oy">{t.statMonthly}</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="visual-chart-bars">
-            {chartStats.map((item, index) => (
-              <div className="chart-bar-column" key={index}>
-                <div className="bar-track">
-                  <div className={`bar-fill ${item.active ? "bar-active" : ""}`} style={{ height: `${item.value}%` }}>
-                    <span className="bar-tooltip-val">{item.realVal} {t.points}</span>
-                  </div>
-                </div>
-                <span className="bar-label-day" style={{ fontSize: "11px" }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="stats-summary-footer">
-            <div className="summary-item">
-              <span className="sum-lbl">{t.totalCodesMonth}</span>
-              <span className="sum-val">{monthlyTotalCodes} {t.ta}</span>
-            </div>
-            <div className="summary-divider"></div>
-            <div className="summary-item">
-              <span className="sum-lbl">{t.avgBonusPoint}</span>
-              <span className="sum-val">+{monthlyAverageBonus}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ==========================================================================
-          🗺 MODAL - DO'KON JOYLASHUVI (YANDEX XARITA LINKI BILAN)
+          🗺 MODAL - BARCHA DO'KONLAR RO'YXATI
           ========================================================================== */}
       {isShopsOpen && (
         <div className="home-modal-overlay" onClick={() => setIsShopsOpen(false)} style={{ zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div className="home-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px", width: "90%", borderRadius: "24px", overflow: "hidden", padding: 0 }}>
-            
-            {/* Modal Sarlavhasi */}
-            <div style={{
-              background: "#f1f5f9",
-              padding: "18px 24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #e2e8f0"
-            }}>
+          <div className="home-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "92%", borderRadius: "24px", overflow: "hidden", padding: 0 }}>
+            <div style={{ background: "#f1f5f9", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <FaStore style={{ color: "#10b981", fontSize: "20px" }} />
-                <span style={{ fontWeight: "700", color: "#1e293b", fontSize: "16px" }}>{t.ourShops}</span>
+                <span style={{ fontWeight: "700", color: "#1e293b", fontSize: "16px" }}>{t.mapSection}</span>
               </div>
-              <button onClick={() => setIsShopsOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b" }}>
-                <FaTimes />
-              </button>
+              <button onClick={() => setIsShopsOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b" }}><FaTimes /></button>
+            </div>
+            <div style={{ padding: "20px", background: "#f8fafc", maxHeight: "70vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "14px" }}>
+              {shopsList.length > 0 ? (
+                shopsList.map((shop) => (
+                  <div key={shop.id} style={{ background: "#ffffff", borderRadius: "16px", padding: "16px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                      <div style={{ background: "#e0f2fe", color: "#0284c7", width: "40px", height: "40px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><FaMapMarkerAlt size={18} /></div>
+                      <div style={{ textAlign: "left" }}>
+                        <h4 style={{ margin: "0 0 4px 0", fontSize: "15px", color: "#0f172a", fontWeight: "700" }}>{shop.title || "Nomsiz do'kon"}</h4>
+                        <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: "1.4" }}>{shop.address || "Manzil kiritilmagan"}</p>
+                      </div>
+                    </div>
+                    <a href={shop.map_link || "#"} target="_blank" rel="noopener noreferrer" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "#ffffff", textDecoration: "none", padding: "10px 16px", borderRadius: "12px", fontSize: "13px", fontWeight: "600", boxShadow: "0 3px 8px rgba(16, 185, 129, 0.15)" }}><FaMapMarkerAlt size={14} />{t.openMapBtn}</a>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: "30px", textAlign: "center", color: "#64748b", fontSize: "14px" }}>{t.noShops}</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================================
+          📊 🆕 YANGI MODAL - TO'LIQ GRAFIK VA STATISTIKA OYNASI
+          ========================================================================== */}
+      {isStatOpen && (
+        <div className="home-modal-overlay" onClick={() => setIsStatOpen(false)} style={{ zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="home-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px", width: "94%", borderRadius: "24px", overflow: "hidden", padding: 0 }}>
+            
+            {/* Modal bosh qismi */}
+            <div style={{ background: "#f8fafc", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <FaChartBar style={{ color: "#2563eb", fontSize: "20px" }} />
+                <span style={{ fontWeight: "700", color: "#1e293b", fontSize: "16px" }}>{t.statTitleModal}</span>
+              </div>
+              <button onClick={() => setIsStatOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b" }}><FaTimes /></button>
             </div>
 
-            {/* Modal Tanasi */}
-            <div style={{ padding: "24px", background: "#f8fafc", textAlign: "center" }}>
+            {/* Modal ichi */}
+            <div style={{ padding: "20px", background: "#ffffff" }}>
               
-              <div style={{
-                background: "#ffffff",
-                borderRadius: "20px",
-                padding: "24px 16px",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
-                border: "1px solid #e2e8f0",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "16px"
-              }}>
-                <div style={{
-                  background: "#e0f2fe",
-                  color: "#0284c7",
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}>
-                  <FaMapMarkerAlt size={26} />
+              {/* SANANI BELGILASH FILTRI */}
+              <div className="filter-section" style={{ marginBottom: "16px" }}>
+                <div className="filter-group">
+                  <label className="filter-label">{t.yearLabel}</label>
+                  <select value={year} onChange={(e) => setYear(e.target.value)} className="filter-select">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label className="filter-label">{t.monthLabel}</label>
+                  <select value={month} onChange={(e) => setMonth(e.target.value)} className="filter-select">
+                    {currentMonthsList.map((m, idx) => (
+                      <option key={idx} value={lang === "ru" ? monthsRu[idx] : monthsUz[idx]}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* JAMBAL BALL */}
+              <div className="total-score-box" style={{ marginBottom: "20px" }}>
+                <span className="score-title">{t.collectedPoints} ({month} - {year})</span>
+                <div className="score-divider"></div>
+                <span className="score-number" style={{ color: "#2563eb" }}>{filteredBonus} {t.points}</span>
+              </div>
+
+              {/* GRAFIK CHIZMASI */}
+              <div className="home-bottom-statistics" style={{ boxShadow: "none", padding: 0, border: "none" }}>
+                <div className="stats-header-row" style={{ marginBottom: "16px" }}>
+                  <div className="stats-header-title">
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>{t.chartAnalysis}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="stats-header-badge" style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "8px" }}>
+                    <select value={statType} onChange={(e) => setStatType(e.target.value)} style={{ border: "none", background: "none", fontSize: "13px", fontWeight: "600", color: "#475569", outline: "none", cursor: "pointer" }}>
+                      <option value="kun">{t.statDaily}</option>
+                      <option value="hafta">{t.statWeekly}</option>
+                      <option value="oy">{t.statMonthly}</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <h4 style={{ margin: "0 0 6px 0", fontSize: "16px", color: "#0f172a", fontWeight: "700" }}>
-                    Climate House
-                  </h4>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: "1.4" }}>
-                    Samarqand shahri, Cho'lpon ko'chasi
-                  </p>
+                <div className="visual-chart-bars" style={{ height: "180px", marginTop: "24px", marginBottom: "20px" }}>
+                  {chartStats.map((item, index) => (
+                    <div className="chart-bar-column" key={index}>
+                      <div className="bar-track">
+                        <div className={`bar-fill ${item.active ? "bar-active" : ""}`} style={{ height: `${item.value}%` }}>
+                          <span className="bar-tooltip-val">{item.realVal} {t.points}</span>
+                        </div>
+                      </div>
+                      <span className="bar-label-day" style={{ fontSize: "11px" }}>{item.label}</span>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Yandex Xarita havolasi */}
-                <a 
-                  href="https://yandex.uz/maps/org/climate_house/222102114104/?ll=66.941871%2C39.678287&z=16" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{
-                    width: "100%",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                    color: "#ffffff",
-                    textDecoration: "none",
-                    padding: "12px 20px",
-                    borderRadius: "14px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)"
-                  }}
-                >
-                  <FaMapMarkerAlt />
-                  {t.openMapBtn}
-                </a>
+                <div className="stats-summary-footer" style={{ marginTop: "14px", background: "#f8fafc", padding: "12px", borderRadius: "12px" }}>
+                  <div className="summary-item">
+                    <span className="sum-lbl">{t.totalCodesMonth}</span>
+                    <span className="sum-val">{monthlyTotalCodes} {t.ta}</span>
+                  </div>
+                  <div className="summary-divider"></div>
+                  <div className="summary-item">
+                    <span className="sum-lbl">{t.avgBonusPoint}</span>
+                    <span className="sum-val">+{monthlyAverageBonus}</span>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -654,7 +667,6 @@ export default function HomeTab({
         <div className="home-modal-overlay" onClick={() => { setModalData(null); setModalType(""); }}>
           <div className="home-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="home-modal-close" onClick={() => { setModalData(null); setModalType(""); }}><FaTimes /></button>
-            
             {modalData.image_url ? (
               <img src={modalData.image_url} alt={modalData.title} className="home-modal-img" style={{ width: "100%", maxHeight: "240px", objectFit: "cover" }} />
             ) : (
@@ -662,15 +674,12 @@ export default function HomeTab({
                 <span style={{ color: "#ffffff", fontWeight: "700", fontSize: "18px" }}>{modalData.title}</span>
               </div>
             )}
-            
             <div className="home-modal-body">
               <span style={{ fontSize: "12px", background: modalType === "campaign" ? "#dbeafe" : "#fef08a", color: modalType === "campaign" ? "#1e40af" : "#854d0e", padding: "2px 8px", borderRadius: "12px", fontWeight: "600" }}>
                 {modalType === "campaign" ? t.modalCampaign : t.modalTip}
               </span>
               <h3 style={{ marginTop: "8px" }}>{modalData.title}</h3>
-              
               {modalData.content && <p className="home-modal-text" style={{ marginTop: "10px", marginBottom: "14px", color: "#475569", lineHeight: "1.5" }}>{modalData.content}</p>}
-              
               {modalType === "campaign" && (
                 <div className="home-modal-dates" style={{ background: "#f8fafc", padding: "10px", borderRadius: "8px" }}>
                   <p style={{ margin: "4px 0" }}><FaCalendarAlt /> <strong>{t.startDate}:</strong> {new Date(modalData.start_date).toLocaleDateString(lang === "ru" ? 'ru-RU' : 'uz-UZ')}</p>

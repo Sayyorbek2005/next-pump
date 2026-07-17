@@ -18,7 +18,7 @@ export default function AksiyaTab({ lang = "uz" }) {
       formTitle: "Yangi Aksiya Muddatini Belgilash",
       formDesc: "Bu yerda belgilangan muddat ichida foydalanuvchilar o'z panellarida aksiya bannerini ko'rib turishadi.",
       labelTitle: "Aksiya Nomi *",
-      placeholderTitle: "Masalan: Bahoriy Omadli Kunlar Aksiyasi",
+      placeholderTitle: "Kunlar Aksiyasi",
       labelImage: "Aksiya Rasmi",
       optional: "(Ixtiyoriy)",
       labelStart: "Boshlanish Sanasi va Vaqti *",

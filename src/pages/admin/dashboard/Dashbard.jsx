@@ -3,19 +3,16 @@ import {
   FaUsers, 
   FaTools, 
   FaBarcode, 
-  // FaUserPlus, 
   FaCheck, 
-  // FaSortAmountDown, 
+  FaTimes, // Bekor qilish ikonasi uchun qo'shildi
   FaSpinner 
 } from "react-icons/fa";
-import { supabase } from "../../../supabase/client"; // Supabase client manzilingizni tekshiring
+import { supabase } from "../../../supabase/client"; 
 import { toast } from "react-toastify";
 import "./dashboard.css"; 
 
 export default function DashboardTab({
   stats = { totalUsers: 0, activeMasters: 0, totalCodes: 0, newClients: 0 },
-  // sortOrder,
-  // setSortOrder,
   sortedChartData = [],
   lang = "uz"
 }) {
@@ -46,6 +43,9 @@ export default function DashboardTab({
       thPromo: "Promo Kod",
       thAction: "Amal",
       actionApprove: "Tasdiqlash",
+      actionReject: "Bekor qilish",
+      actionRejected: "Kod rad etildi! ❌",
+      errorReject: "Rad etishda xatolik yuz berdi",
       noTableData: "Tasdiqlash kutilayotgan so'rovlar mavjud emas 🔍",
       unit: "ta",
       loadingText: "Yuklanmoqda..."
@@ -65,6 +65,9 @@ export default function DashboardTab({
       thPromo: "Промо Код",
       thAction: "Действие",
       actionApprove: "Подтвердить",
+      actionReject: "Отклонить",
+      actionRejected: "Код отклонен! ❌",
+      errorReject: "Ошибка при отклонении кодов",
       noTableData: "Ожидающих запросов нет 🔍",
       unit: "шт",
       loadingText: "Загрузка..."
@@ -107,7 +110,7 @@ export default function DashboardTab({
 
   // --- TASDIQLASH FUNKSIYASI ---
   const handleApproveBonus = async (request) => {
-    setActionLoadingId(request.id);
+    setActionLoadingId({ id: request.id, type: "approve" });
     try {
       // 1. used_codes jadvalida ushbu yozuv holatini 'approved' ga o'zgartiramiz
       const { error: statusError } = await supabase
@@ -117,7 +120,7 @@ export default function DashboardTab({
 
       if (statusError) throw statusError;
 
-      // 2. Ustaning hozirgi ayni vaqtdagi bonusini olish
+      // 2. Ustaning hozirgi vaqtdagi bonusini olish
       const { data: profile, error: profError } = await supabase
         .from("profiles")
         .select("bonus")
@@ -138,11 +141,33 @@ export default function DashboardTab({
 
       toast.success(lang === "uz" ? "Kod tasdiqlandi va 1 ball berildi! 🎉" : "Код подтвержден, 1 балл начислен! 🎉");
       
-      // Ro'yxatni qayta yangilaymiz
       fetchPendingRequests();
     } catch (err) {
       console.error("Tasdiqlash xatoligi:", err.message);
       toast.error(lang === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // --- BEKOR QILISH FUNKSIYASI (YANGI QO'SHILDI) ---
+  const handleRejectBonus = async (request) => {
+    setActionLoadingId({ id: request.id, type: "reject" });
+    try {
+      // used_codes jadvalida statusni 'rejected' (rad etilgan) qilamiz. Ball berilmaydi.
+      const { error: rejectError } = await supabase
+        .from("used_codes")
+        .update({ status: "rejected" })
+        .eq("id", request.id);
+
+      if (rejectError) throw rejectError;
+
+      toast.warn(t.actionRejected);
+      
+      fetchPendingRequests();
+    } catch (err) {
+      console.error("Rad etish xatoligi:", err.message);
+      toast.error(t.errorReject);
     } finally {
       setActionLoadingId(null);
     }
@@ -176,31 +201,12 @@ export default function DashboardTab({
           </div>
           <p className="stat-number">{stats.totalCodes.toLocaleString()} {t.unit}</p>
         </div>
-
-        {/* <div className="stat-card">
-          <div className="stat-card-header">
-            <h4>{t.newClients}</h4>
-            <div className="icon-wrapper purple"><FaUserPlus /></div>
-          </div>
-          <p className="stat-number">{stats.newClients.toLocaleString()}</p>
-        </div> */}
       </div>
 
       {/* 📊 Diagramma Bo'limi */}
       <div className="chart-fullwidth-section">
         <div className="chart-header-container">
           <h4 className="chart-title">{t.chartTitle}</h4>
-          {/* <div className="select-wrapper">
-            <FaSortAmountDown className="select-icon" />
-            <select
-              className="text-sort-select"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-            >
-              <option value="desc">{t.sortDesc}</option>
-              <option value="asc">{t.sortAsc}</option>
-            </select>
-          </div> */}
         </div>
 
         <div className="chart-scroll-wrapper">
@@ -239,7 +245,7 @@ export default function DashboardTab({
         </div>
       </div>
 
-      {/* 📋 TASDIQLASH KUTILAYOTGAN KODLAR JADVALI (YANGI QO'SHILDI) */}
+      {/* 📋 TASDIQLASH VA BEKOR QILISH KUTILAYOTGAN KODLAR JADVALI */}
       <div className="chart-fullwidth-section" style={{ marginTop: "30px", padding: "20px" }}>
         <h4 className="chart-title" style={{ marginBottom: "20px" }}>{t.tableTitle}</h4>
         
@@ -255,7 +261,7 @@ export default function DashboardTab({
                   <th style={{ padding: "14px", color: "#475569", fontWeight: "600" }}>{t.thName}</th>
                   <th style={{ padding: "14px", color: "#475569", fontWeight: "600" }}>{t.thRegionPhone}</th>
                   <th style={{ padding: "14px", color: "#475569", fontWeight: "600" }}>{t.thPromo}</th>
-                  <th style={{ padding: "14px", color: "#475569", fontWeight: "600", textMetrics: "center" }}>{t.thAction}</th>
+                  <th style={{ padding: "14px", color: "#475569", fontWeight: "600" }}>{t.thAction}</th>
                 </tr>
               </thead>
               <tbody>
@@ -275,31 +281,61 @@ export default function DashboardTab({
                         </span>
                       </td>
                       <td style={{ padding: "14px" }}>
-                        <button
-                          className="approve-action-btn"
-                          disabled={actionLoadingId === req.id}
-                          onClick={() => handleApproveBonus(req)}
-                          style={{ 
-                            background: "#22c55e", 
-                            color: "#fff", 
-                            border: "none", 
-                            padding: "8px 16px", 
-                            borderRadius: "6px", 
-                            cursor: "pointer", 
-                            display: "flex", 
-                            alignItems: "center", 
-                            gap: "8px",
-                            fontWeight: "500",
-                            boxShadow: "0 2px 4px rgba(34, 197, 94, 0.2)"
-                          }}
-                        >
-                          {actionLoadingId === req.id ? (
-                            <FaSpinner className="spinner-anime" size={14} />
-                          ) : (
-                            <FaCheck size={12} />
-                          )}
-                          {t.actionApprove}
-                        </button>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          {/* Tasdiqlash tugmasi */}
+                          <button
+                            className="approve-action-btn"
+                            disabled={actionLoadingId?.id === req.id}
+                            onClick={() => handleApproveBonus(req)}
+                            style={{ 
+                              background: "#22c55e", 
+                              color: "#fff", 
+                              border: "none", 
+                              padding: "8px 14px", 
+                              borderRadius: "6px", 
+                              cursor: "pointer", 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: "6px",
+                              fontWeight: "500",
+                              boxShadow: "0 2px 4px rgba(34, 197, 94, 0.2)"
+                            }}
+                          >
+                            {actionLoadingId?.id === req.id && actionLoadingId?.type === "approve" ? (
+                              <FaSpinner className="spinner-anime" size={14} />
+                            ) : (
+                              <FaCheck size={12} />
+                            )}
+                            {t.actionApprove}
+                          </button>
+
+                          {/* Bekor qilish (Rad etish) tugmasi */}
+                          <button
+                            className="reject-action-btn"
+                            disabled={actionLoadingId?.id === req.id}
+                            onClick={() => handleRejectBonus(req)}
+                            style={{ 
+                              background: "#ef4444", 
+                              color: "#fff", 
+                              border: "none", 
+                              padding: "8px 14px", 
+                              borderRadius: "6px", 
+                              cursor: "pointer", 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: "6px",
+                              fontWeight: "500",
+                              boxShadow: "0 2px 4px rgba(239, 68, 68, 0.2)"
+                            }}
+                          >
+                            {actionLoadingId?.id === req.id && actionLoadingId?.type === "reject" ? (
+                              <FaSpinner className="spinner-anime" size={14} />
+                            ) : (
+                              <FaTimes size={12} />
+                            )}
+                            {t.actionReject}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

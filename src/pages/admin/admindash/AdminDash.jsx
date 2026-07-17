@@ -13,7 +13,8 @@ import HistoryTab from "../kodtarixi/Kodtarixi";
 import AksiyaTab from "../aksiya/Aksiya";
 import MaslahatlarTab from "../news/News";
 import ProfilTab from "../profil/Profil"; 
-import KatalogTab from "../katalog/Katalog"; // 📂 Yangi katalog komponenti
+import KatalogTab from "../katalog/Katalog"; 
+import MapAdmin from "../map/Map"; // 📍 Yangi Xarita boshqaruvi komponenti
 
 import "./adminDash.css";
 
@@ -187,7 +188,7 @@ export default function AdminDash() {
             <GeneratorTab codeQuantity={codeQuantity} setCodeQuantity={setCodeQuantity} loading={loading} allPromoCodes={allPromoCodes} lang={lang} />
           )}
 
-          {/* 📂 YANGI QO'SHILGAN KATALOG TABI */}
+          {/* 📂 KATALOG TABI */}
           {activeTab === "katalog" && (
             <KatalogTab 
               lang={lang} 
@@ -198,6 +199,11 @@ export default function AdminDash() {
 
           {activeTab === "magazin" && (
             <MagazinTab lang={lang} />
+          )}
+
+          {/* 📍 YANGI QO'SHILGAN XARITA TABI */}
+          {activeTab === "xarita" && (
+            <MapAdmin lang={lang} />
           )}
 
           {activeTab === "history" && (
@@ -223,4 +229,4 @@ export default function AdminDash() {
       </main>
     </div>
   );
-} 
+}

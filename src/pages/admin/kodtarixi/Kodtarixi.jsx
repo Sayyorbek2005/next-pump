@@ -5,32 +5,42 @@ import { FaSpinner, FaRegClock, FaUser, FaBarcode, FaSearch } from "react-icons/
 export default function HistoryTab({ lang = "uz" }) {
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // 🔍 Qidiruv matni uchun state
+  const [searchTerm, setSearchTerm] = useState(""); 
 
+  // --- FAQAT O'ZBEK VA RUS TILLARI (STATUSLAR BILAN) ---
   const translations = {
     uz: {
       title: "📷 Kiritilgan Kodlar Tarixi",
       noData: "Hozircha kodlar kiritilmagan 🔍",
       noResults: "Qidiruv bo'yicha hech qanday ma'lumot topilmadi ❌",
       loadingText: "Yuklanmoqda...",
-      searchPlaceholder: "Ism, telefon, viloyat yoki tuman bo'yicha qidirish...",
+      searchPlaceholder: "Ism, telefon, kod, viloyat yoki tuman bo'yicha...",
       user: "Usta",
       code: "Kod",
       time: "Sana / Vaqt",
+      // Status tarjimalari
+      approved: "Tasdiqlangan",
+      rejected: "Rad etilgan",
+      pending: "Kutilmoqda"
     },
     ru: {
       title: "📷 История Введенных Кодов",
       noData: "История кодов пока пуста 🔍",
       noResults: "По вашему запросу ничего не найдено ❌",
       loadingText: "Загрузка...",
-      searchPlaceholder: "Поиск по имени, телефону, региону или району...",
+      searchPlaceholder: "Поиск по имени, телефону, коду, региону или району...",
       user: "Мастер",
       code: "Код",
       time: "Дата / Время",
+      // Status tarjimalari
+      approved: "Одобрено",
+      rejected: "Отклонено",
+      pending: "В ожидании"
     }
   };
 
-  const t = translations[lang] || translations.uz;
+  // Agar uz yoki ru dan boshqa til kelsa, standart 'uz' tanlanadi
+  const t = lang === "ru" ? translations.ru : translations.uz;
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -59,26 +69,37 @@ export default function HistoryTab({ lang = "uz" }) {
     fetchHistory();
   }, []);
 
-  // 🔍 Filtratsiya tizimi (Ism, Telefon, Viloyat, Tuman bo'yicha)
+  // 🔍 Filtratsiya tizimi (Ism, Telefon, Kod, Viloyat va Tuman bo'yicha)
   const filteredHistory = historyData.filter((item) => {
     const profile = item.profiles || {};
+    const promo = item.promo_codes || {}; 
+    
     const fullName = (profile.full_name || "").toLowerCase();
     const phone = (profile.phone || "").toLowerCase();
     const region = (profile.region || "").toLowerCase();
     const district = (profile.district || "").toLowerCase();
+    const code = (promo.code || "").toLowerCase(); 
     const search = searchTerm.toLowerCase();
 
     return (
       fullName.includes(search) ||
       phone.includes(search) ||
       region.includes(search) ||
-      district.includes(search)
+      district.includes(search) ||
+      code.includes(search) 
     );
   });
 
   const formatDate = (dateString) => {
     const d = new Date(dateString);
     return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()} | ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  // Status ranglarini aniqlash funksiyasi
+  const getStatusBgColor = (status) => {
+    if (status === "approved") return "#22c55e"; // Yashil
+    if (status === "rejected") return "#ef4444"; // Qizil
+    return "#f59e0b"; // Sariq (pending uchun)
   };
 
   return (
@@ -119,21 +140,29 @@ export default function HistoryTab({ lang = "uz" }) {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
           {historyData.length === 0 ? (
-            /* Bazada umuman ma'lumot yo'q bo'lsa */
             <div style={{ gridColumn: "1/-1", padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               {t.noData}
             </div>
           ) : filteredHistory.length > 0 ? (
-            /* Qidiruvga mos kelgan ma'lumotlar */
             filteredHistory.map((item) => (
               <div key={item.id} style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", display: "flex", flexDirection: "column", position: "relative" }}>
                 
-                {/* Holat badge'ini yuqori burchakka chiroyli joylashtiramiz */}
-                <span style={{ position: "absolute", top: "16px", right: "16px", background: item.status === "approved" ? "#22c55e" : "#f59e0b", color: "#fff", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>
-                  {item.status}
+                {/* 🌟 Status belgisi (Tarjima qilingan va dinamik rangda) */}
+                <span style={{ 
+                  position: "absolute", 
+                  top: "16px", 
+                  right: "16px", 
+                  background: getStatusBgColor(item.status), 
+                  color: "#fff", 
+                  padding: "4px 10px", 
+                  borderRadius: "20px", 
+                  fontSize: "11px", 
+                  fontWeight: "600", 
+                  textTransform: "uppercase" 
+                }}>
+                  {t[item.status] || item.status}
                 </span>
 
-                {/* Ma'lumotlar qismi */}
                 <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px", flexGrow: 1 }}>
                   
                   {/* Usta haqida ma'lumot */}
@@ -171,7 +200,6 @@ export default function HistoryTab({ lang = "uz" }) {
               </div>
             ))
           ) : (
-            /* Qidiruv natijasi topilmasa */
             <div style={{ gridColumn: "1/-1", padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               {t.noResults}
             </div>

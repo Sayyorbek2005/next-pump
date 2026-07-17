@@ -18,7 +18,7 @@ export default function MaslahatlarTab({ lang = "uz" }) {
       formTitle: "Ustalar uchun Maslahatlar va Tavsiyalar",
       formDesc: "Bu yerga yozilgan tavsiyalar yoki muhim gaplar bevosita ustalar (userlar) panelida ko'rinadi.",
       labelTitle: " Nomlanishi *",
-      placeholderTitle: "Masalan: To'lov tizimidagi yangilanishlar",
+      placeholderTitle: "Masalan yangilanishlar",
       labelContent: "Maslahat Matni *",
       placeholderContent: "Foydalanuvchilar ko'rishi kerak bo'lgan gaplar va tavsiyalarni yozing...",
       btnPublish: "E'lon Qilish",

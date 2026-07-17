@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react"; 
 import { supabase } from "../../../supabase/client";
 import { toast } from "react-toastify";
-import { FaCoins, FaGift, FaShoppingBag, FaClock, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-import { FiArrowLeft } from "react-icons/fi"; // 💡 Orqaga ikonka import qilindi
+import { FaCoins, FaGift, FaShoppingBag, FaClock, FaCheckCircle, FaTimesCircle, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FiArrowLeft } from "react-icons/fi"; 
 import "../magazine/magazine.css";
 
-export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // 💡 onBack prop sifatida qabul qilindi
+export default function UserMagazin({ currentUser, lang = "uz", onBack }) { 
   const [prizes, setPrizes] = useState([]);
   const [myOrders, setMyOrders] = useState([]);
   const [userBonus, setUserBonus] = useState(0);
   const [loadingOrderId, setLoadingOrderId] = useState(null);
+  const [showOrders, setShowOrders] = useState(false); // 💡 Tarixni ko'rsatish/yashirish holati
 
   const translations = {
     uz: {
-      backBtn: "Asosiy sahifaga qaytish", // 💡 Yangi tarjima qo'shildi
+      backBtn: "Asosiy sahifaga qaytish", 
       storeTitle: "🎁 Sovg'alar do'koni",
       storeSub: "Yig'gan ballaringizni ajoyib sovg'alarga almashtiring!",
       yourBalance: "Sizning balansingiz:",
@@ -21,7 +22,7 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
       availablePrizes: "Mavjud sovg'alar",
       noPrizes: "Hozircha do'konda sovg'alar yo'q.",
       orderHistory: "Buyurtmalaringiz tarixi",
-      noOrders: "Sizda hali buyurtmalar magjud emas.",
+      noOrders: "Sizda hali buyurtmalar mavjud emas.",
       thName: "Sovg'a nomi",
       thPoints: "Sarflangan ball",
       thDate: "Sana",
@@ -40,10 +41,12 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
       toastSuccess: "Buyurtma qabul qilindi! Admin tasdiqlashini kuting. 🎁",
       toastError: "Xatolik yuz berdi: ",
       confirmPrefix: '"',
-      confirmSuffix: '" sovg\'asini '
+      confirmSuffix: '" sovg\'asini ',
+      viewOrdersBtn: "Buyurtmalar tarixini ko'rish", // 💡 Yangi tarjima
+      closeOrdersBtn: "Tarixni yopish" // 💡 Yangi tarjima
     },
     ru: {
-      backBtn: "Вернуться на главную", // 💡 Yangi tarjima qo'shildi
+      backBtn: "Вернуться на главную", 
       storeTitle: "🎁 Магазин подарков",
       storeSub: "Обменивайте накопленные баллы на отличные подарки!",
       yourBalance: "Ваш баланс:",
@@ -70,7 +73,9 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
       toastSuccess: "Заказ принят! Ожидайте подтверждения админа. 🎁",
       toastError: "Произошла ошибка: ",
       confirmPrefix: 'Вы хотите купить подарок "',
-      confirmSuffix: '" за '
+      confirmSuffix: '" за ',
+      viewOrdersBtn: "Посмотреть историю заказов", // 💡 Yangi tarjima
+      closeOrdersBtn: "Свернуть историю" // 💡 Yangi tarjima
     }
   };
 
@@ -79,6 +84,7 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
+      // 1. Sovg'alarni yuklash
       const { data: pData, error: pErr } = await supabase
         .from("prizes")
         .select("*")
@@ -86,6 +92,7 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
       if (pErr) throw pErr;
       setPrizes(pData || []);
 
+      // 2. Foydalanuvchi balansini yuklash
       const { data: profData, error: profErr } = await supabase
         .from("profiles")
         .select("bonus")
@@ -94,18 +101,21 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
       if (profErr) throw profErr;
       setUserBonus(profData?.bonus || 0);
 
-      const { data: oData, error: oErr } = await supabase
-        .from("orders")
-        .select("id, status, created_at, prizes(name, price)")
-        .eq("user_id", currentUser.id)
-        .order("created_at", { ascending: false });
-      if (oErr) throw oErr;
-      setMyOrders(oData || []);
+      // 3. Agar tarix paneli ochiq bo'lsa, buyurtmalarni yuklash
+      if (showOrders) {
+        const { data: oData, error: oErr } = await supabase
+          .from("orders")
+          .select("id, status, created_at, prizes(name, price)")
+          .eq("user_id", currentUser.id)
+          .order("created_at", { ascending: false });
+        if (oErr) throw oErr;
+        setMyOrders(oData || []);
+      }
 
     } catch (err) {
       toast.error(t.toastFetchError + err.message);
     }
-  }, [currentUser?.id, t.toastFetchError]);
+  }, [currentUser?.id, showOrders, t.toastFetchError]);
 
   useEffect(() => {
     fetchData();
@@ -160,14 +170,14 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
     } catch (err) {
       toast.error(t.toastError + err.message);
     } finally {
-      loadingOrderId(null);
+      setLoadingOrderId(null);
     }
   };
 
   return (
     <div className="user-magazin-container">
       
-      {/* ⬅️ ENGER TEPADAGI HOME PAGE'GA QAYTISH TUGMASI */}
+      {/* ⬅️ HOME PAGE'GA QAYTISH TUGMASI */}
       {onBack && (
         <div style={{ marginBottom: "15px", display: "flex", justifyContent: "flex-start" }}>
           <button 
@@ -259,40 +269,90 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) { // �
 
       {/* 📥 Foydalanuvchining shaxsiy buyurtmalari tarixi */}
       <h3 className="section-title"><FaClock /> {t.orderHistory}</h3>
-      <div className="orders-history-card">
-        {myOrders.length === 0 ? (
-          <p className="empty-text">{t.noOrders}</p>
-        ) : (
-          <div className="user-orders-table-wrapper">
-            <table className="user-orders-table">
-              <thead>
-                <tr>
-                  <th>{t.thName}</th>
-                  <th>{t.thPoints}</th>
-                  <th>{t.thDate}</th>
-                  <th>{t.thStatus}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td><strong>{order.prizes?.name || t.deletedPrize}</strong></td>
-                    <td className="table-price"><FaCoins /> {order.prizes?.price || 0}</td>
-                    <td>{new Date(order.created_at).toLocaleDateString(lang === "ru" ? "ru-RU" : "uz-UZ")}</td>
-                    <td>
-                      <span className={`user-status-badge ${order.status}`}>
-                        {order.status === "pending" && <><FaClock /> {t.statusPending}</>}
-                        {order.status === "approved" && <><FaCheckCircle /> {t.statusApproved}</>}
-                        {order.status === "rejected" && <><FaTimesCircle /> {t.statusRejected}</>}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      
+      {!showOrders ? (
+        /* 🔘 Boshida faqat shu tugma turadi va bosilganda tarix yuklanadi */
+        <div style={{ textAlign: "center", padding: "30px 20px" }}>
+          <button 
+            className="view-orders-trigger-btn"
+            style={{
+              padding: "12px 24px",
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              boxShadow: "0 4px 6px rgba(37,99,235,0.15)",
+              transition: "background 0.2s"
+            }}
+            onClick={() => setShowOrders(true)}
+          >
+            <FaClock /> {t.viewOrdersBtn} <FaChevronDown />
+          </button>
+        </div>
+      ) : (
+        /* 📜 Tugma bosilgandan keyin yuklanadigan jadval */
+        <div className="orders-history-card">
+          {myOrders.length === 0 ? (
+            <p className="empty-text">{t.noOrders}</p>
+          ) : (
+            <>
+              <div className="user-orders-table-wrapper">
+                <table className="user-orders-table">
+                  <thead>
+                    <tr>
+                      <th>{t.thName}</th>
+                      <th>{t.thPoints}</th>
+                      <th>{t.thDate}</th>
+                      <th>{t.thStatus}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myOrders.map((order) => (
+                      <tr key={order.id}>
+                        <td><strong>{order.prizes?.name || t.deletedPrize}</strong></td>
+                        <td className="table-price"><FaCoins /> {order.prizes?.price || 0}</td>
+                        <td>{new Date(order.created_at).toLocaleDateString(lang === "ru" ? "ru-RU" : "uz-UZ")}</td>
+                        <td>
+                          <span className={`user-status-badge ${order.status}`}>
+                            {order.status === "pending" && <><FaClock /> {t.statusPending}</>}
+                            {order.status === "approved" && <><FaCheckCircle /> {t.statusApproved}</>}
+                            {order.status === "rejected" && <><FaTimesCircle /> {t.statusRejected}</>}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Tarixni qayta yopish tugmasi */}
+              <div style={{ textAlign: "center", marginTop: "15px" }}>
+                <button 
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#64748b",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    fontSize: "14px"
+                  }}
+                  onClick={() => setShowOrders(false)}
+                >
+                  {t.closeOrdersBtn} <FaChevronUp />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
     </div>
   );

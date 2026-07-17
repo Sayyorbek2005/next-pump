@@ -4,7 +4,8 @@ import {
   FaHourglassHalf, 
   FaTimesCircle, 
   FaHashtag,
-  FaArrowLeft 
+  FaArrowLeft,
+  FaHistory
 } from "react-icons/fa";
 import { supabase } from "../../../supabase/client"; 
 import "./kodkiritish.css";
@@ -16,6 +17,7 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
   const [bonusCode, setBonusCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+  const [showHistory, setShowHistory] = useState(false); // Tarixni ko'rsatish/yashirish holati
 
   const translations = {
     uz: {
@@ -25,7 +27,7 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
       placeholder: "KODNI KIRITING",
       btnConfirm: "Kodni jo'natish",
       checking: "Yuborilmoqda...",
-      historyTitle: "Oxirgi kiritilgan kodlaringiz",
+      historyTitle: "Kiritilgan kodlaringiz",
       thCode: "Kod",
       thTime: "Sana va Vaqt",
       thStatus: "Holati",
@@ -35,7 +37,8 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
       noData: "Siz hali kod kiritmadingiz",
       alertSuccess: "Kod muvaffaqiyatli tekshirishga yuborildi!",
       alertWarning: "Iltimos, faollashtirish uchun kodni kiriting!",
-      alertError: "Xatolik yuz berdi: "
+      alertError: "Xatolik yuz berdi: ",
+      viewHistoryBtn: "Barcha kiritilgan kodlarni ko'rish"
     },
     ru: {
       backBtn: "Назад",
@@ -54,7 +57,8 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
       noData: "Вы еще не вводили коды",
       alertSuccess: "Код успешно отправлен на проверку!",
       alertWarning: "Пожалуйста, введите код для активации!",
-      alertError: "Произошла ошибка: "
+      alertError: "Произошла ошибка: ",
+      viewHistoryBtn: "Посмотреть все введенные коды"
     }
   };
 
@@ -82,6 +86,9 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
   }, [userId]);
 
   const fetchHistory = useCallback(async () => {
+    // Agar showHistory true bo'lsa, ma'lumotlarni yuklaymiz
+    if (!showHistory) return; 
+
     try {
       const activeId = await getActiveUserId();
       if (!activeId) return;
@@ -90,15 +97,15 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
         .from("used_codes")
         .select("*, promo_codes(code)") 
         .eq("user_id", activeId)
-        .order("created_at", { ascending: false })
-        .limit(10);
+        .order("created_at", { ascending: false }); // Limit yo'q, hammasini olib keladi
 
       if (!error && data) setHistoryData(data);
     } catch (err) {
       console.error(err);
     }
-  }, [getActiveUserId]);
+  }, [getActiveUserId, showHistory]);
 
+  // Faqat showHistory o'zgarganda yoki funksiya yangilanganda ishlaydi
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
@@ -156,7 +163,12 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
       if (dbError) throw dbError;
 
       setBonusCode("");
-      fetchHistory();
+      
+      // Agar tarix paneli ochiq bo'lsa, yangilaydi
+      if (showHistory) {
+        fetchHistory();
+      }
+      
       alert(t.alertSuccess);
 
     } catch (error) {
@@ -165,7 +177,7 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
     } finally {
       setLoading(false);
     }
-  }, [bonusCode, getActiveUserId, fetchHistory, t.alertSuccess, t.alertWarning]);
+  }, [bonusCode, getActiveUserId, fetchHistory, showHistory, t.alertSuccess, t.alertWarning]);
 
   const renderStatusBadge = (status) => {
     if (status === "approved" || status === "confirmed") {
@@ -215,7 +227,7 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
             {loading ? t.checking : t.btnConfirm}
           </button>
 
-          {/* 🖼️ Kod kiritish containeridan keyin joylashtirilgan rasm */}
+          {/* 🖼️ Rasm */}
           <div className="promo-image-container" style={{ marginTop: "20px", textAlign: "center" }}>
             <img 
               src={promoBanner} 
@@ -226,40 +238,68 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
         </div>
 
         <div className="code-history-panel">
-          <h4 className="history-block-title">{t.historyTitle}</h4>
-          <div className="table-wrapper">
-            <table className="modern-table">
-              <thead>
-                <tr>
-                  <th>{t.thCode}</th>
-                  <th>{t.thTime}</th>
-                  <th>{t.thStatus}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historyData.length > 0 ? (
-                  historyData.map((item, idx) => (
-                    <tr key={item.id || idx}>
-                      <td className="font-bold text-dark">
-                        {item.promo_codes?.code || `ID: ${item.code_id}`}
-                      </td>
-                      <td className="text-muted">
-                        {new Date(item.created_at).toLocaleDateString("uz-UZ")} <br />
-                        <span className="time-lbl">
-                          {new Date(item.created_at).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </td>
-                      <td>{renderStatusBadge(item.status)}</td>
+          {!showHistory ? (
+            /* Boshida faqat shu tugma turadi */
+            <div style={{ textAlign: "center", padding: "40px 20px" }}>
+              <button 
+                className="view-history-trigger-btn"
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: "#007bff",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  boxShadow: "0 4px 6px rgba(0,123,255,0.15)"
+                }}
+                onClick={() => setShowHistory(true)}
+              >
+                <FaHistory /> {t.viewHistoryBtn}
+              </button>
+            </div>
+          ) : (
+            /* Tugma bosilgandan keyin jadval ochiladi */
+            <>
+              <h4 className="history-block-title">{t.historyTitle}</h4>
+              <div className="table-wrapper">
+                <table className="modern-table">
+                  <thead>
+                    <tr>
+                      <th>{t.thCode}</th>
+                      <th>{t.thTime}</th>
+                      <th>{t.thStatus}</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="3" className="empty-table-text">{t.noData}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {historyData.length > 0 ? (
+                      historyData.map((item, idx) => (
+                        <tr key={item.id || idx}>
+                          <td className="font-bold text-dark">
+                            {item.promo_codes?.code || `ID: ${item.code_id}`}
+                          </td>
+                          <td className="text-muted">
+                            {new Date(item.created_at).toLocaleDateString("uz-UZ")} <br />
+                            <span className="time-lbl">
+                              {new Date(item.created_at).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </td>
+                          <td>{renderStatusBadge(item.status)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="empty-table-text">{t.noData}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

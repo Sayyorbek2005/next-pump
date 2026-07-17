@@ -9,6 +9,7 @@ import {
   FiGift,
   FiShoppingBag,
   FiLayers, 
+  FiMapPin, // 📍 Xarita uchun yangi ikonka import qilindi
   FiX 
 } from "react-icons/fi"; 
 import "./sidebar.css"; 
@@ -36,6 +37,7 @@ export default function Sidebar({
     }
   }, []);
 
+  // --- FAQAT O'ZBEK VA RUS TILLARI (XARITA BILAN) ---
   const translations = {
     uz: {
       brandSub: "DO'KON BOSHQARUVI",
@@ -44,6 +46,7 @@ export default function Sidebar({
       generator: `Kod Generator (${codesCount})`,
       katalog: "Mahsulotlar Katalogi", 
       magazin: "Sovg'alar Do'koni", 
+      xarita: "Do'konlar Xaritasi", // 📍 O'zbekcha tarjima
       aksiya: "Aksiya Muddatlari",
       news: "Yangiliklar va Maslahatlar",
       history: "Kodlar Tarixi (Foto)", 
@@ -56,6 +59,7 @@ export default function Sidebar({
       generator: `Генератор Кодов (${codesCount})`,
       katalog: "Каталог Товаров", 
       magazin: "Магазин Подарков", 
+      xarita: "Карта Магазинов", // 📍 Ruscha tarjima
       aksiya: "Сроки Акций",
       news: "Новости и Советы",
       history: "История Кодов (Фото)", 
@@ -63,7 +67,8 @@ export default function Sidebar({
     }
   };
 
-  const t = translations[lang] || translations.uz;
+  // Agar uz yoki ru dan boshqa til kelsa, standart holatda 'uz' tanlanadi
+  const t = lang === "ru" ? translations.ru : translations.uz;
 
   const menuItems = [
     { id: "dashboard", label: t.dashboard, icon: <FiSliders /> },
@@ -71,12 +76,13 @@ export default function Sidebar({
     { id: "random", label: t.generator, icon: <FiCode /> },
     { id: "katalog", label: t.katalog, icon: <FiLayers /> }, 
     { id: "magazin", label: t.magazin, icon: <FiGift /> }, 
+    { id: "xarita", label: t.xarita, icon: <FiMapPin /> }, // 📍 Xarita bo'limi menyuga qo'shildi
     { id: "aksiya", label: t.aksiya, icon: <FiCalendar /> },
     { id: "maslahatlar", label: t.news, icon: <FiFileText /> }, 
     { id: "history", label: t.history, icon: <FiCamera /> }, 
   ];
 
-  // Admin ismining birinchi harfini avatar uchun olish (masalan, "Sayyidbek" -> "S")
+  // Admin ismining birinchi harfini avatar uchun olish
   const firstLetter = adminName ? adminName.charAt(0).toUpperCase() : "A";
 
   return (
@@ -121,7 +127,7 @@ export default function Sidebar({
           {/* 👥 Chiziq (Ajratuvchi) */}
           <li className="menu-divider"></li>
 
-          {/* 👤 Menyu tugmasi shaklidagi yangi profil elementi */}
+          {/* 👤 Menyu tugmasi shaklidagi profil elementi */}
           <li 
             className={`profile-menu-item ${activeTab === "profil" ? "active" : ""}`}
             onClick={() => {
