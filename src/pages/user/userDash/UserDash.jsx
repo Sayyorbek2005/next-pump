@@ -277,7 +277,7 @@ export default function UserDash() {
     navigate("/login");
   };
 
-  // 🚀 KOD YUBORILGANDA VA BALANSNI 1 DOLLARGA OSHIRISH MANTIQI
+  // 🚀 KOD YUBORILISH MANTIQI (Duorallikni oldini olish maqsadida frontenddagi qo'lda +1 qo'shish qismi olib tashlandi)
   const handleSendCode = async () => {
     if (loading) return;
     const trimmedCode = bonusCode.trim().toUpperCase();
@@ -317,24 +317,15 @@ export default function UserDash() {
       // 3. Promo-kodni ishsiz (faolmas) holatga keltirish
       await supabase.from("promo_codes").update({ is_active: false }).eq("id", promoCode.id);
 
-      // 🌟 4. FOYDALANUVCHINING BALANSIGA +1 DOLLAR QO'SHISH
-      const yangiBonus = (currentUser.bonus || 0) + 1; // Agar ma'lumotlar bazasida ustun nomi bonus bo'lsa, qiymat 1 dollarga oshadi
-      const { error: profileUpdateError } = await supabase
-        .from("profiles")
-        .update({ bonus: yangiBonus })
-        .eq("id", currentUser.id);
+      // ✨ DIQQAT: Bu yerda bo'lgan qo'lda profiles update (bonus + 1) logikasi o'chirildi.
+      // Chunki Supabase Trigeri ma'lumotlar bazasida avtomatik ravishda balansni hisoblab to'g'ri qo'shib beradi.
 
-      if (profileUpdateError) throw profileUpdateError;
-
-      const updatedUser = { ...currentUser, bonus: yangiBonus };
-      setCurrentUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      // Matn ball so'zidan dollar so'ziga o'zgartirildi
-      toast.success(lang === "uz" ? "Kod muvaffaqiyatli yuborildi va profilingizga 1$ qo'shildi! ⏳" : "Код успешно отправлен, вам зачислен 1$! ⏳");
+      toast.success(lang === "uz" ? "Kod muvaffaqiyatli yuborildi! ⏳" : "Код успешно отправлен! ⏳");
       setBonusCode("");
       handleTabChange("home");
-      fetchUserData(updatedUser, year, month, statType);
+      
+      // Realtime ishlab turgani uchun fetchUserData bazadagi yangi, to'g'ri balansni tortib oladi.
+      fetchUserData(currentUser, year, month, statType);
     } catch (err) {
       toast.error("Xatolik yuz berdi: " + err.message);
     } finally {

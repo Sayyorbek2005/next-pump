@@ -120,7 +120,7 @@ export default function AdminDash() {
     } catch (error) {
       toast.error("Ma'lumotlarni yuklashda xatolik");
     } finally {
-      setLoading(false); // ✨ Label o'rniga to'g'ri finally bloki qo'yildi
+      setLoading(false); // Tasodifiy sintaktik xato to'g'rilandi
     }
   }, []);
 
