@@ -4,19 +4,17 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Sahifalarni import qilish
 import Register from "./pages/registrer/Register";
-import Login from "./pages/login/Login";
 import UserDash from "./pages/user/userDash/UserDash"; 
 import AdminDashboard from "./pages/admin/admindash/AdminDash"; 
 import MasterDetail from "./pages/admin/userdetals/UserDestals";
 
-// Himoyalangan marshrut va Tekshiruvchi komponentlar
+// Himoyalangan marshrut komponenti
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
-import AppInitializer from "./components/appI";
 
 function App() {
   return (
     <>
-      {/* Bildirishnomalar uchun ToastContainer */}
+      {/* ToastContainer bildirishnomalari uchun */}
       <ToastContainer
         position="top-right"
         autoClose={2000}
@@ -28,14 +26,10 @@ function App() {
       />
 
       <Routes>
-        {/* BOSH KIRISH NUQTASI (Tekshiruvchi) */}
-        <Route path="/" element={<AppInitializer />} />
-
         {/* Ochiq sahifalar */}
-        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* USER DASHBOARD (Faqat foydalanuvchilar uchun) */}
+        {/* USER DASHBOARD */}
         <Route
           path="/user-dashboard"
           element={
@@ -45,7 +39,7 @@ function App() {
           }
         />
 
-        {/* ADMIN DASHBOARD (Faqat adminlar uchun) */}
+        {/* ADMIN DASHBOARD */}
         <Route
           path="/admin-dashboard"
           element={
@@ -55,7 +49,7 @@ function App() {
           }
         />
 
-        {/* USTALAR PROFILI (Faqat adminlar uchun) */}
+        {/* YANGI MARSHRUT: Ustaning ID raqami bo'yicha profiliga kirish */}
         <Route
           path="/admin/master/:id"
           element={
@@ -65,7 +59,7 @@ function App() {
           }
         />
 
-        {/* Noto'g'ri havolalar yozilganda avtomat yo'naltirish */}
+        {/* Tizimda mavjud bo'lmagan yoki boshlang'ich (/) sahifalarga kirganda avtomat yo'naltirish */}
         <Route
           path="*"
           element={

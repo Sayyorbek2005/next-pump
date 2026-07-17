@@ -1,175 +1,128 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../../supabase/client"; 
-import { 
-  FaArrowLeft, 
-  FaPhone, 
-  FaMapMarkerAlt, 
-  FaBarcode, 
-  FaCalendarAlt 
-} from "react-icons/fa";
-import { toast } from "react-toastify";
-import "./userdetals.css"; 
+import React from 'react';
+// CSS faylingizni bu yerda import qilishni unutmang!
+import '../admindash/adminDash.css'; 
 
-export default function UserDetails() {
-  const { id } = useParams(); 
-  const navigate = useNavigate();
-  
-  const [master, setMaster] = useState(null);
-  const [scannedCodes, setScannedCodes] = useState([]);
-  const [loading, setLoading] = useState(true);
+const UserDetails = ({ user, onBack }) => {
+  // Agar ma'lumotlar yuklanayotgan bo'lsa
+  if (!user) {
+    return (
+      <div className="detail-page-container">
+        <div className="loading-container">Ma'lumot yuklanmoqda...</div>
+      </div>
+    );
+  }
 
-  const fetchMasterAndCodesData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      // 1. Ustaning hamma ma'lumotlarini profiles jadvalidan olish (*)
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (profileError) throw profileError;
-      setMaster(profileData);
-
-      // 2. Usta skaner qilgan kodlarni used_codes jadvalidan olish
-      const { data: codesData, error: codesError } = await supabase
-        .from("used_codes")
-        .select(`
-          id,
-          created_at,
-          promo_codes (
-            code
-          )
-        `)
-        .eq("user_id", id)
-        .order("created_at", { ascending: false });
-
-      if (codesError) throw codesError;
-      setScannedCodes(codesData || []);
-
-    } catch (err) {
-      toast.error("Ma'lumotlarni yuklashda xatolik: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      fetchMasterAndCodesData();
-    }
-  }, [id, fetchMasterAndCodesData]);
-
-  if (loading) return <div className="loading-container">Usta ma'lumotlari yuklanmoqda...</div>;
-  if (!master) return <div className="loading-container">Usta topilmadi! ❌</div>;
+  // Ismdan birinchi harfni olish (Avatar uchun)
+  const firstLetter = user.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   return (
-    <div className="tab-section fade-in full-width-layout">
-      {/* ⬅️ Orqaga qaytish */}
+    <div className="detail-page-container">
+      
+      {/* ⬅️ Orqaga Qaytish Tugmasi */}
       <div className="details-header-action">
-        <button className="back-to-list-btn" onClick={() => navigate(-1)}>
-          <FaArrowLeft /> Ustalar ro'yxatiga qaytish
+        <button className="back-to-dash-btn" onClick={onBack}>
+          ← Ro'yxatga qaytish
         </button>
       </div>
 
-      {/* 💳 Ustaning profili */}
-      <div className="master-profile-hero-card">
-        <div className="hero-avatar-wrap">
-          <div className="avatar-placeholder">
-            {master.full_name ? master.full_name.charAt(0).toUpperCase() : "U"}
-          </div>
-          <div>
-            <h2>{master.full_name}</h2>
-            <span className="hero-role-badge">{master.role || "Usta"}</span>
-          </div>
-        </div>
-
-        <div className="hero-details-grid">
-          <div className="hero-detail-item">
-            <FaPhone className="hero-icon" />
-            <div>
-              <span>Telefon raqami</span>
-              <p>{master.phone || "Ko'rsatilmagan"}</p>
-            </div>
+      {/* 👤 Profil Karta */}
+      <div className="master-profile-main-card">
+        <div className="profile-header-flex">
+          {/* Avatar doirasi */}
+          <div className="profile-avatar-large">
+            {firstLetter}
           </div>
           
-          {/* 📍 Alohida sahifadagi Manzil qismi (Viloyat va tuman birgalikda) */}
-          <div className="hero-detail-item">
-            <FaMapMarkerAlt className="hero-icon" />
-            <div>
-              <span>Xizmat ko'rsatish hududi</span>
-              <p>
-                {master.region 
-                  ? `${master.region}${master.district ? ` (${master.district} tumani)` : ""}` 
-                  : "Kiritilmagan"}
-              </p>
-            </div>
+          {/* Ism va status */}
+          <div className="profile-main-info">
+            <h2>{user.name || "Samandar"}</h2>
+            <p className="profile-subtitle">{user.role || "Professional Usta / Hamkor"}</p>
+            {/* Telefon raqam */}
+            <p className="profile-subtitle" style={{ fontSize: '14px', margin: '2px 0 8px 0' }}>
+              📞 {user.phone || "+998902700901"}
+            </p>
+            <span className="status-badge-active">FAOL</span>
           </div>
         </div>
       </div>
 
-      {/* 📊 Skanerlar soni vidjeti */}
-      <div className="detail-stats-grid" style={{ marginTop: "24px" }}>
-        <div className="detail-stat-item-card" style={{ maxWidth: "350px" }}>
+      {/* 📊 3 ta Vidjet Gridi (Rasmda buzilib turgan joy aynan shu yerda tuzatildi) */}
+      <div className="detail-stats-grid">
+        
+        {/* 1-Karta: Jami Skanerlangan */}
+        <div className="detail-stat-item-card">
           <div className="card-icon-wrap blue-bg">
-            <FaBarcode />
+            📦
           </div>
           <div className="card-stat-value-wrap">
-            <span>Skanerlangan kodlar soni</span>
-            <h3>{scannedCodes.length} ta kod</h3>
+            <span>Jami skanerlangan</span>
+            <h3>{user.totalScanned || 0} ta mahsulot</h3>
           </div>
         </div>
-      </div>
 
-      {/* 📋 Skaner qilingan kodlar ro'yxati */}
-      <div className="history-table-section" style={{ marginTop: "32px" }}>
-        <div className="table-section-title">
-          <FaCalendarAlt style={{ color: "#2563eb", marginRight: "8px" }} />
-          <h3>Skaner Qilingan Kodlar Ro'yxati</h3>
+        {/* 2-Karta: To'plangan Bonus */}
+        <div className="detail-stat-item-card">
+          <div className="card-icon-wrap gold-bg">
+            🪙
+          </div>
+          <div className="card-stat-value-wrap">
+            <span>To'plangan bonus</span>
+            <h3>{user.totalBonus || 0} ball</h3>
+          </div>
         </div>
 
-        <div className="custom-table-wrapper" style={{ marginTop: "16px" }}>
-          <table className="custom-table">
+        {/* 3-Karta: Xizmat Ko'rsatish Hududi */}
+        <div className="detail-stat-item-card">
+          <div className="card-icon-wrap green-bg">
+            📍
+          </div>
+          <div className="card-stat-value-wrap">
+            <span>Xizmat ko'rsatish hududi</span>
+            <h3>{user.region || "Samarqand / Samarqand shahri"}</h3>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 📜 Skanerlangan Shtrix-kodlar Tarixi Jadvali */}
+      <div className="history-table-section-card">
+        <div className="section-title-wrap">
+          <span className="title-icon">🕒</span>
+          <h3>Skanerlangan Shtrix-kodlar Tarixi</h3>
+        </div>
+
+        <div className="detail-table-wrapper">
+          <table className="detail-custom-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Skaner qilingan kod matni</th>
+                <th style={{ width: '80px' }}>#</th>
+                <th>Shtrix-kod (Promo)</th>
                 <th>Skanerlangan vaqti</th>
               </tr>
             </thead>
             <tbody>
-              {scannedCodes.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="empty-row-text">
-                    Bu usta hali biror marta kod skaner qilmadi. 📥
-                  </td>
-                </tr>
-              ) : (
-                scannedCodes.map((item, index) => (
-                  <tr key={item.id} className="table-row-hover-effect">
+              {user.history && user.history.length > 0 ? (
+                user.history.map((item, index) => (
+                  <tr key={index}>
                     <td>{index + 1}</td>
-                    <td style={{ fontWeight: "bold", color: "#2563eb", letterSpacing: "1px" }}>
-                      <FaBarcode style={{ marginRight: "6px", color: "#94a3b8" }} />
-                      {item.promo_codes?.code || "NOMA'LUM KOD"}
-                    </td>
-                    <td style={{ color: "#475569" }}>
-                      {new Date(item.created_at).toLocaleString("uz-UZ", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </td>
+                    <td className="barcode-font">{item.code}</td>
+                    <td>{item.scannedAt}</td>
                   </tr>
                 ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="empty-table-text">
+                    Ushbu usta hali shtrix-kod skanerlamagan.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   );
-}
+};
+
+export default UserDetails;
