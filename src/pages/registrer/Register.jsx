@@ -36,7 +36,7 @@ export default function Register() {
   const [region, setRegion] = useState("");
   const [district, setDistrict] = useState(""); 
   const [job, setJob] = useState("");
-  const [loading, setLoading] = useState(true); // Sahifa yuklanayotganda avtomatik tekshiruv uchun true qilib turamiz
+  const [loading, setLoading] = useState(true); 
 
   const [regionOpen, setRegionOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
@@ -55,13 +55,12 @@ export default function Register() {
       tg.expand(); 
     }
 
-    // 🔥 AVTOMATIK TIZIMGA KIRISH (Auto-Login) LOGIKASI
     const checkUserAndLogin = async () => {
-      const telegramId = tg?.initDataUnsafe?.user?.id;
+      // Telegram ID ni har doim String ko'rinishida olamiz
+      const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
 
       if (telegramId) {
         try {
-          // Supabase'dan ushbu Telegram ID ga tegishli profilni qidiramiz
           const { data: existingUser, error } = await supabase
             .from("profiles")
             .select("*")
@@ -70,24 +69,29 @@ export default function Register() {
 
           if (error) throw error;
 
-          // Agar foydalanuvchi topilsa, ssenariyni chetlab o'tib to'g'ridan-to'g'ri tizimga kirgizamiz
-          if (existingUser) {
+          // 🔥 Agar foydalanuvchi bazada bo'lsa VA to'liq ro'yxatdan o'tgan bo'lsa (viloyati tanlangan)
+          if (existingUser && existingUser.region && existingUser.job) {
             localStorage.setItem("user", JSON.stringify(existingUser));
             toast.success("Xush kelibsiz!");
             
-            // Roliga qarab yo'naltiramiz
             if (existingUser.role === "admin") {
               navigate("/admin-dashboard", { replace: true });
             } else {
               navigate("/user-dashboard", { replace: true });
             }
-            return; // To'xtatamiz, quyidagi yuklashlarni ochib o'tirmaymiz
+            return; 
+          }
+
+          // Agar botda kontakt bergan bo'lsa, lekin saytda hali ro'yxatdan o'tmagan bo'lsa:
+          if (existingUser) {
+            setFullName(existingUser.full_name || "");
+            setPhone(existingUser.phone ? formatPhoneNumber(existingUser.phone) : "+998 ");
           }
         } catch (err) {
           console.error("Avtomatik kirishda xatolik:", err.message);
         }
       }
-      setLoading(false); // Agar foydalanuvchi topilmasa yoki Telegramdan kirmagan bo'lsa, yuklashni to'xtatib formani ko'rsatamiz
+      setLoading(false); 
     };
 
     checkUserAndLogin();
@@ -102,8 +106,9 @@ export default function Register() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [tg, navigate]);
 
-  const handlePhoneChange = (e) => {
-    let input = e.target.value;
+  // Telefon raqamni chiroyli formatlash uchun yordamchi funksiya
+  const formatPhoneNumber = (value) => {
+    let input = value;
     if (!input.startsWith("+998")) {
       input = "+998 " + input.replace(/\D/g, "");
     }
@@ -115,8 +120,11 @@ export default function Register() {
     if (limitedNumbers.length > 2) formatted += " " + limitedNumbers.slice(2, 5);
     if (limitedNumbers.length > 5) formatted += " " + limitedNumbers.slice(5, 7);
     if (limitedNumbers.length > 7) formatted += " " + limitedNumbers.slice(7, 9);
+    return formatted;
+  };
 
-    setPhone(formatted);
+  const handlePhoneChange = (e) => {
+    setPhone(formatPhoneNumber(e.target.value));
   };
 
   const handleStepOneNext = () => {
@@ -147,7 +155,7 @@ export default function Register() {
     }
 
     const cleanPhone = phone.replace(/\s/g, "");
-    const telegramId = tg?.initDataUnsafe?.user?.id || null;
+    const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
 
     await saveUserToSupabase(cleanPhone, telegramId);
   };
@@ -155,48 +163,63 @@ export default function Register() {
   const saveUserToSupabase = async (rawPhone, telegramId) => {
     setLoading(true);
     try {
-      // 1. Telefon raqam band emasligini tekshirish
+      // 1. Ushbu telefon yoki Telegram ID bilan bazada profil bormi yoki yo'qligini tekshiramiz
       const { data: existing, error: checkError } = await supabase
         .from("profiles")
-        .select("*") 
-        .eq("phone", rawPhone)
+        .select("*")
+        .or(`phone.eq.${rawPhone}${telegramId ? `,telegram_id.eq.${telegramId}` : ""}`)
         .maybeSingle();
 
       if (checkError) throw checkError;
 
-      if (existing) {
-        toast.error("Bu telefon raqami allaqachon ro‘yxatdan o‘tgan!");
-        setLoading(false);
-        return;
-      }
-
-      // 2. Yangi foydalanuvchi obyekti
-      const newUser = {
+      // 2. Yangilanadigan yoki qo'shiladigan ma'lumotlar to'plami
+      const userData = {
+        telegram_id: telegramId,
         full_name: fullName.trim(),
         phone: rawPhone,
-        telegram_id: telegramId,
         birth_date: birthDate,
         region,
         district, 
         job,
         password: password, 
-        role: "user"
+        role: existing?.role || "user" // Agar bazada profil bo'lsa uning rolini o'zgartirmaymiz
       };
 
-      const { data: insertedData, error: insertError } = await supabase
-        .from("profiles")
-        .insert([newUser])
-        .select()
-        .single();
+      let savedData;
 
-      if (insertError) throw insertError;
+      if (existing) {
+        // 3. Agar foydalanuvchi bot orqali kontakt ulashib bazaga tushgan bo'lsa (UPDATE qilamiz)
+        const { data: updatedData, error: updateError } = await supabase
+          .from("profiles")
+          .update(userData)
+          .eq("id", existing.id)
+          .select()
+          .single();
 
-      // 3. Mahalliy xotiraga yozish va dashboardga yo'naltirish
-      localStorage.setItem("user", JSON.stringify(insertedData));
+        if (updateError) throw updateError;
+        savedData = updatedData;
+      } else {
+        // 4. Agar mutlaqo yangi foydalanuvchi bo'lsa (INSERT qilamiz)
+        const { data: insertedData, error: insertError } = await supabase
+          .from("profiles")
+          .insert([userData])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        savedData = insertedData;
+      }
+
+      // LocalStorage-ga saqlash va Dashboard-ga yo'naltirish
+      localStorage.setItem("user", JSON.stringify(savedData));
       toast.success("Ro‘yxatdan muvaffaqiyatli o‘tdingiz!");
       
       setTimeout(() => {
-        navigate("/user-dashboard", { replace: true });
+        if (savedData.role === "admin") {
+          navigate("/admin-dashboard", { replace: true });
+        } else {
+          navigate("/user-dashboard", { replace: true });
+        }
       }, 150);
 
     } catch (err) {
@@ -206,7 +229,6 @@ export default function Register() {
     }
   };
 
-  // 🔥 Tekshiruv ketayotganda ekranda loading spinner yoki matn chiqarib turamiz
   if (loading && step === 1) {
     return (
       <div className="auth-page-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>

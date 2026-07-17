@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabase/client"; // Supabase client manzilingizni tekshirib oling
+import { supabase } from "../supabase/client";
 
 export default function AppInitializer() {
   const navigate = useNavigate();
@@ -8,76 +8,80 @@ export default function AppInitializer() {
   const tg = window.Telegram?.WebApp;
 
   useEffect(() => {
-    async function checkUser() {
-      const telegramId = tg?.initDataUnsafe?.user?.id;
+    const initApp = async () => {
+      try {
+        // 1. Mahalliy xotiradan foydalanuvchini tekshiramiz
+        const localUser = JSON.parse(localStorage.getItem("user"));
+        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
 
-      // 1. Agar Telegram ichidan kirmagan bo'lsa (oddiy brauzerda ochilgan bo'lsa)
-      if (!telegramId) {
-        const localUser = localStorage.getItem("user");
-        if (localUser) {
-          const parsed = JSON.parse(localUser);
-          if (parsed.role === "admin") {
+        // Agar brauzer xotirasida to'liq ro'yxatdan o'tgan foydalanuvchi bo'lsa, to'g'ridan-to'g'ri o'tkazamiz
+        if (localUser && localUser.region && localUser.job) {
+          if (localUser.role === "admin") {
             navigate("/admin-dashboard", { replace: true });
           } else {
             navigate("/user-dashboard", { replace: true });
           }
-        } else {
-          navigate("/login", { replace: true });
+          return;
         }
-        setLoading(false);
-        return;
-      }
 
-      // 2. Agar foydalanuvchi Telegram orqali kirgan bo'lsa
-      try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("telegram_id", telegramId)
-          .maybeSingle();
+        // 2. Agar xotirada bo'lmasa, lekin Telegram orqali kirgan bo'lsa, bazadan tekshiramiz
+        if (telegramId) {
+          const { data: user, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("telegram_id", telegramId)
+            .maybeSingle();
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (profile) {
-          // BAZADA BOR: Profil to'liq kiritilganligini tekshiramiz (viloyat, tuman, kasb bormi?)
-          if (profile.region && profile.district && profile.job) {
-            
-            // Ma'lumotlar to'liq! LocalStorage ga yozamiz va hecham Register-ga kirmasdan Dashboardga o'tamiz.
-            localStorage.setItem("user", JSON.stringify(profile));
-            
-            if (profile.role === "admin") {
+          // Agar foydalanuvchi bor bo'lsa VA viloyati hamda kasbi to'ldirilgan bo'lsa
+          if (user && user.region && user.job) {
+            localStorage.setItem("user", JSON.stringify(user)); // Xotiraga saqlaymiz
+
+            if (user.role === "admin") {
               navigate("/admin-dashboard", { replace: true });
             } else {
               navigate("/user-dashboard", { replace: true });
             }
-          } else {
-            // Profil bor, lekin ma'lumotlar to'liq emas (faqat botdan kontakt ulashgan)
-            // Register sahifasiga profil ma'lumotlari bilan birga jo'natamiz
-            navigate("/register", { state: { profile }, replace: true });
+            return;
           }
-        } else {
-          // Bazada bunday foydalanuvchi umuman yo'q bo'lsa
-          navigate("/register", { replace: true });
         }
+
+        // 3. Agar foydalanuvchi umuman topilmasa yoki ma'lumotlari chala bo'lsa, registratsiyaga yuboramiz
+        navigate("/register", { replace: true });
+
       } catch (err) {
-        console.error("Avtorizatsiya xatoligi:", err);
-        navigate("/login", { replace: true });
+        console.error("Ilovani yuklashda xatolik:", err.message);
+        // Xatolik yuz bersa ham xavfsizlik uchun ro'yxatdan o'tishga yo'naltiramiz
+        navigate("/register", { replace: true });
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    if (tg) {
-      tg.ready();
-      tg.expand();
-    }
-    checkUser();
+    initApp();
   }, [tg, navigate]);
 
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#111", color: "#fff" }}>
-        <p>Yuklanmoqda...</p>
+      <div 
+        className="auth-page-wrapper" 
+        style={{ 
+          display: "flex", 
+          justifyContent: "center", 
+          alignItems: "center", 
+          height: "100vh",
+          fontFamily: "sans-serif",
+          color: "#333",
+          background: "#f4f6f9"
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div className="loader" style={{ marginBottom: "15px", fontSize: "18px", fontWeight: "bold" }}>
+            Tizim tekshirilmoqda...
+          </div>
+          <p style={{ color: "#777", fontSize: "14px" }}>Iltimos, kuting.</p>
+        </div>
       </div>
     );
   }
