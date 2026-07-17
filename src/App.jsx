@@ -11,7 +11,9 @@ import MasterDetail from "./pages/admin/userdetals/UserDestals";
 
 // Himoyalangan marshrut komponenti
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
-import AppInitializer from "./components/appI"; // Yangi qo'shiladigan komponent
+
+// AppInitializer komponenti
+import AppInitializer from "./components/appI";
 
 function App() {
   return (
@@ -28,7 +30,7 @@ function App() {
       />
 
       <Routes>
-        {/* ENG ASOSIY LINK: Kirganda tekshirish */}
+        {/* ENG ASOSIY LINK: Kirganda foydalanuvchini tekshiruvchi nuqta */}
         <Route path="/" element={<AppInitializer />} />
 
         {/* Ochiq sahifalar */}
@@ -65,26 +67,30 @@ function App() {
           }
         />
 
-        {/* Qolgan barcha holatlarda avtomat yo'naltirish */}
-        <Route
-          path="*"
-          element={
-            <ProtectedRoute allowedRoles={["user", "admin"]}>
-              <RoleBasedRedirect />
-            </ProtectedRoute>
-          }
-        />
+        {/* Qolgan barcha kutilmagan linklarda xavfsiz yo'naltirish */}
+        <Route path="*" element={<RoleBasedRedirect />} />
       </Routes>
     </>
   );
 }
 
+// Rollarga qarab xavfsiz yo'naltiruvchi yordamchi komponent
 function RoleBasedRedirect() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user?.role === "admin") {
-    return <Navigate to="/admin-dashboard" replace />;
+  try {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      const user = JSON.parse(userString);
+      if (user?.role === "admin") {
+        return <Navigate to="/admin-dashboard" replace />;
+      }
+      return <Navigate to="/user-dashboard" replace />;
+    }
+  } catch (e) {
+    console.error("Redirectda xatolik:", e);
   }
-  return <Navigate to="/user-dashboard" replace />;
+  
+  // Agar foydalanuvchi umuman tizimga kirmagan bo'lsa, oq ekransiz to'g'ri bosh sahifaga o'tkazadi
+  return <Navigate to="/" replace />;
 }
 
 export default App;

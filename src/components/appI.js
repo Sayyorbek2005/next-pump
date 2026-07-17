@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabase/client";
+import { supabase } from "../supabase/client"; // To'g'ri papkadan import qilinayotganiga ishonch hosil qiling
 
 export default function AppInitializer() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const tg = window.Telegram?.WebApp;
 
   useEffect(() => {
     const initApp = async () => {
       try {
-        // 1. Mahalliy xotiradan foydalanuvchini tekshiramiz
-        const localUser = JSON.parse(localStorage.getItem("user"));
-        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
+        // 1. Telegram WebApp obyektini xavfsiz olish
+        const tg = window?.Telegram?.WebApp;
+        const telegramId = tg?.initDataUnsafe?.user?.id 
+          ? String(tg.initDataUnsafe.user.id) 
+          : null;
 
-        // Agar brauzer xotirasida to'liq ro'yxatdan o'tgan foydalanuvchi bo'lsa, to'g'ridan-to'g'ri o'tkazamiz
+        // 2. Mahalliy xotiradan (localStorage) tekshirish
+        let localUser = null;
+        try {
+          const stored = localStorage.getItem("user");
+          if (stored) {
+            localUser = JSON.parse(stored);
+          }
+        } catch (e) {
+          console.error("LocalStorage o'qishda xatolik:", e);
+        }
+
+        // Agar telefonda/brauzerda allaqachon to'liq ro'yxatdan o'tgan user bo'lsa, srazi dashboardga yuboramiz
         if (localUser && localUser.region && localUser.job) {
           if (localUser.role === "admin") {
             navigate("/admin-dashboard", { replace: true });
@@ -24,7 +36,7 @@ export default function AppInitializer() {
           return;
         }
 
-        // 2. Agar xotirada bo'lmasa, lekin Telegram orqali kirgan bo'lsa, bazadan tekshiramiz
+        // 3. Agar xotirada bo'lmasa va Telegram orqali kirgan bo'lsa, bazadan tekshiramiz
         if (telegramId) {
           const { data: user, error } = await supabase
             .from("profiles")
@@ -32,11 +44,13 @@ export default function AppInitializer() {
             .eq("telegram_id", telegramId)
             .maybeSingle();
 
-          if (error) throw error;
+          if (error) {
+            console.error("Supabase ma'lumot olishda xato:", error.message);
+          }
 
-          // Agar foydalanuvchi bor bo'lsa VA viloyati hamda kasbi to'ldirilgan bo'lsa
+          // Foydalanuvchi bazada bor bo'lsa va ma'lumotlari to'liq bo'lsa
           if (user && user.region && user.job) {
-            localStorage.setItem("user", JSON.stringify(user)); // Xotiraga saqlaymiz
+            localStorage.setItem("user", JSON.stringify(user)); // Keyingi safar tezroq kirishi uchun saqlaymiz
 
             if (user.role === "admin") {
               navigate("/admin-dashboard", { replace: true });
@@ -47,12 +61,11 @@ export default function AppInitializer() {
           }
         }
 
-        // 3. Agar foydalanuvchi umuman topilmasa yoki ma'lumotlari chala bo'lsa, registratsiyaga yuboramiz
+        // 4. Agar umuman foydalanuvchi topilmasa yoki ma'lumotlari chala bo'lsa, registratsiyaga yuboramiz
         navigate("/register", { replace: true });
 
       } catch (err) {
-        console.error("Ilovani yuklashda xatolik:", err.message);
-        // Xatolik yuz bersa ham xavfsizlik uchun ro'yxatdan o'tishga yo'naltiramiz
+        console.error("Kutilmagan xatolik yuz berdi:", err);
         navigate("/register", { replace: true });
       } finally {
         setLoading(false);
@@ -60,12 +73,11 @@ export default function AppInitializer() {
     };
 
     initApp();
-  }, [tg, navigate]);
+  }, [navigate]);
 
   if (loading) {
     return (
       <div 
-        className="auth-page-wrapper" 
         style={{ 
           display: "flex", 
           justifyContent: "center", 
@@ -77,10 +89,27 @@ export default function AppInitializer() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <div className="loader" style={{ marginBottom: "15px", fontSize: "18px", fontWeight: "bold" }}>
-            Tizim tekshirilmoqda...
+          <div className="spinner" style={{
+            margin: "0 auto 15px",
+            width: "40px",
+            height: "40px",
+            border: "4px solid #ccc",
+            borderTop: "4px solid #3498db",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite"
+          }}></div>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+          <div style={{ fontSize: "16px", fontWeight: "bold", color: "#2c3e50" }}>
+            Yuklanmoqda...
           </div>
-          <p style={{ color: "#777", fontSize: "14px" }}>Iltimos, kuting.</p>
+          <p style={{ color: "#7f8c8d", fontSize: "13px", margin: "5px 0 0" }}>
+            Tizim ma'lumotlari tekshirilmoqda
+          </p>
         </div>
       </div>
     );

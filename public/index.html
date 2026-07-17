@@ -9,15 +9,16 @@
 </head>
 <body>
 
-    <h1>Mening Telegram Web App ilovam</h1>
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
 
     <script>
-        // Script yuklanganidan so'ng Telegram WebApp obyektini tekshirish
-        // Ilova ishga tushganini bildirish uchun:
-        window.Telegram.WebApp.ready();
-        
-        // Foydalanuvchi ranglar tizimiga moslashish (ixtiyoriy)
-        document.body.style.setProperty('--tg-theme-bg-color', window.Telegram.WebApp.themeParams.bg_color);
+        // Telegram WebApp tayyor bo'lganini bildirish
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand(); // Ilovani to'liq ekranda ochish
+        }
     </script>
 </body>
 </html>
