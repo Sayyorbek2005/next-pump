@@ -9,6 +9,9 @@ import {
 import { supabase } from "../../../supabase/client"; 
 import "./kodkiritish.css";
 
+// 🖼️ Rasmni loyihangiz papkasidan import qilish
+import promoBanner from "./assets/image.png"; 
+
 export default function CodeTab({ lang = "uz", userId = "", onBack }) {
   const [bonusCode, setBonusCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +60,6 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
 
   const t = translations[lang] || translations.uz;
 
-  // 🔄 1. getActiveUserId funksiyasi
   const getActiveUserId = useCallback(async () => {
     if (userId) return userId;
     
@@ -79,7 +81,6 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
     return null;
   }, [userId]);
 
-  // 🔄 2. fetchHistory funksiyasi
   const fetchHistory = useCallback(async () => {
     try {
       const activeId = await getActiveUserId();
@@ -102,7 +103,6 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
     fetchHistory();
   }, [fetchHistory]);
 
-  // 🚀 3. handleSendCodeSubmit (Faqat kodni yuborish)
   const handleSendCodeSubmit = useCallback(async () => {
     if (!bonusCode.trim()) {
       alert(t.alertWarning);
@@ -118,7 +118,6 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
 
       const cleanCode = bonusCode.trim().toUpperCase();
 
-      // 1. promo_codes jadvalidan kodni tekshirish
       const { data: promoData, error: promoError } = await supabase
         .from("promo_codes")
         .select("id")
@@ -129,7 +128,6 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
         throw new Error("Kiritilgan kod xato yoki bazada mavjud emas!");
       }
 
-      // 2. Ushbu kod foydalanuvchi tomonidan avval ishlatilganini tekshirish
       const { data: alreadyUsed, error: checkError } = await supabase
         .from("used_codes")
         .select("id")
@@ -143,14 +141,13 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
         throw new Error("Siz bu kodni allaqachon tekshirishga yuborgansiz! ❌");
       }
 
-      // 3. used_codes jadvaliga yozish (Rasm maydoni butunlay olib tashlandi yoki null yuboriladi)
       const { error: dbError } = await supabase
         .from("used_codes")
         .insert([
           {
             user_id: activeId,
             code_id: promoData.id, 
-            image_url: null, // rasm ixtiyoriyligi sababli doim null ketadi
+            image_url: null,
             status: "pending",
             created_at: new Date().toISOString()
           }
@@ -182,13 +179,12 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
   return (
     <div className="code-tab-container fade-in">
       
-      {/* ⬅️ NAVIGATSIYA ORQAGA QAYTISH TUGMASI */}
       <div className="code-top-nav">
         <button className="code-back-btn" onClick={onBack}>
           <FaArrowLeft /> {t.backBtn} 
         </button>
       </div>
-        <br />
+      <br />
 
       <div className="code-card-header">
         <div className="header-icon-box"><FaHashtag /></div>
@@ -218,6 +214,15 @@ export default function CodeTab({ lang = "uz", userId = "", onBack }) {
           >
             {loading ? t.checking : t.btnConfirm}
           </button>
+
+          {/* 🖼️ Kod kiritish containeridan keyin joylashtirilgan rasm */}
+          <div className="promo-image-container" style={{ marginTop: "20px", textAlign: "center" }}>
+            <img 
+              src={promoBanner} 
+              alt="Aksiya kodi" 
+              style={{ width: "100%", borderRadius: "12px", maxWidth: "450px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} 
+            />
+          </div>
         </div>
 
         <div className="code-history-panel">
