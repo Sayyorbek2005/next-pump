@@ -14,7 +14,7 @@ import AksiyaTab from "../aksiya/Aksiya";
 import MaslahatlarTab from "../news/News";
 import ProfilTab from "../profil/Profil"; 
 import KatalogTab from "../katalog/Katalog"; 
-import MapAdmin from "../map/Map"; // 📍 Yangi Xarita boshqaruvi komponenti
+import MapAdmin from "../map/Map"; 
 
 import "./adminDash.css";
 
@@ -32,12 +32,10 @@ export default function AdminDash() {
   const [codeQuantity, setCodeQuantity] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // 📂 Kataloglar bo'limida tanlangan katalogni saqlash uchun state
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const navigate = useNavigate();
 
-  // 🌍 Tilni o'zgartirish va ma'lumotlarni saqlash funksiyasi
   const changeLanguage = async (newLang) => {
     setLang(newLang);
     localStorage.setItem("app_lang", newLang);
@@ -60,12 +58,10 @@ export default function AdminDash() {
     }
   };
 
-  // 🔄 Usta holatini (is_active) o'zgartirish funksiyasi
   const handleToggleMasterStatus = async (masterId, currentStatus) => {
     const newStatus = currentStatus === false ? true : false;
     
     try {
-      // 1. Supabase ma'lumotlar bazasida yangilash
       const { error } = await supabase
         .from("profiles")
         .update({ is_active: newStatus })
@@ -73,7 +69,6 @@ export default function AdminDash() {
 
       if (error) throw error;
 
-      // 2. React state-ini (mahalliy ro'yxatni) yangilash
       setMastersList((prevList) =>
         prevList.map((master) =>
           master.id === masterId ? { ...master, is_active: newStatus } : master
@@ -117,14 +112,16 @@ export default function AdminDash() {
 
       const chartData = (profilesRes.data || []).map(u => ({
         name: u.full_name || u.phone || "Noma'lum",
-        ball: Number(u.bonus) || 0,
+        dollar: Number(u.bonus) || 0, 
         kiritishlarSonini: (historyRes.data || []).filter(req => req.user_id === u.id).length
       }));
       setTopMasters(chartData);
 
     } catch (error) {
       toast.error("Ma'lumotlarni yuklashda xatolik");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false); // ✨ Label o'rniga to'g'ri finally bloki qo'yildi
+    }
   }, []);
 
   useEffect(() => {
@@ -149,7 +146,7 @@ export default function AdminDash() {
     navigate("/login");
   };
 
-  const sortedChartData = [...topMasters].sort((a, b) => sortOrder === "asc" ? a.ball - b.ball : b.ball - a.ball).slice(0, 10);
+  const sortedChartData = [...topMasters].sort((a, b) => sortOrder === "asc" ? a.dollar - b.dollar : b.dollar - a.dollar).slice(0, 10);
 
   return (
     <div className="dash-container">
@@ -188,7 +185,6 @@ export default function AdminDash() {
             <GeneratorTab codeQuantity={codeQuantity} setCodeQuantity={setCodeQuantity} loading={loading} allPromoCodes={allPromoCodes} lang={lang} />
           )}
 
-          {/* 📂 KATALOG TABI */}
           {activeTab === "katalog" && (
             <KatalogTab 
               lang={lang} 
@@ -201,7 +197,6 @@ export default function AdminDash() {
             <MagazinTab lang={lang} />
           )}
 
-          {/* 📍 YANGI QO'SHILGAN XARITA TABI */}
           {activeTab === "xarita" && (
             <MapAdmin lang={lang} />
           )}

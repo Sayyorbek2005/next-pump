@@ -277,7 +277,7 @@ export default function UserDash() {
     navigate("/login");
   };
 
-  // 🚀 KOD YUBORILGANDA VA BALANSNI 1 BALGA OSHIRISH MANTIQI
+  // 🚀 KOD YUBORILGANDA VA BALANSNI 1 DOLLARGA OSHIRISH MANTIQI
   const handleSendCode = async () => {
     if (loading) return;
     const trimmedCode = bonusCode.trim().toUpperCase();
@@ -317,8 +317,8 @@ export default function UserDash() {
       // 3. Promo-kodni ishsiz (faolmas) holatga keltirish
       await supabase.from("promo_codes").update({ is_active: false }).eq("id", promoCode.id);
 
-      // 🌟 4. FOYDALANUVCHINING BALANSIGA +1 BALL QO'SHISH (PROFILES UPDATE)
-      const yangiBonus = (currentUser.bonus || 0) + 1;
+      // 🌟 4. FOYDALANUVCHINING BALANSIGA +1 DOLLAR QO'SHISH
+      const yangiBonus = (currentUser.bonus || 0) + 1; // Agar ma'lumotlar bazasida ustun nomi bonus bo'lsa, qiymat 1 dollarga oshadi
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({ bonus: yangiBonus })
@@ -326,12 +326,12 @@ export default function UserDash() {
 
       if (profileUpdateError) throw profileUpdateError;
 
-      // Mahalliy stateni va localStorage-ni tezkor yangilash
       const updatedUser = { ...currentUser, bonus: yangiBonus };
       setCurrentUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      toast.success("Kod muvaffaqiyatli yuborildi va profilingizga 1 ball qo'shildi! ⏳");
+      // Matn ball so'zidan dollar so'ziga o'zgartirildi
+      toast.success(lang === "uz" ? "Kod muvaffaqiyatli yuborildi va profilingizga 1$ qo'shildi! ⏳" : "Код успешно отправлен, вам зачислен 1$! ⏳");
       setBonusCode("");
       handleTabChange("home");
       fetchUserData(updatedUser, year, month, statType);

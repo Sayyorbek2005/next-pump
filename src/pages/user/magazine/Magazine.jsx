@@ -10,21 +10,21 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
   const [myOrders, setMyOrders] = useState([]);
   const [userBonus, setUserBonus] = useState(0);
   const [loadingOrderId, setLoadingOrderId] = useState(null);
-  const [showOrders, setShowOrders] = useState(false); // 💡 Tarixni ko'rsatish/yashirish holati
+  const [showOrders, setShowOrders] = useState(false); 
 
   const translations = {
     uz: {
       backBtn: "Asosiy sahifaga qaytish", 
       storeTitle: "🎁 Sovg'alar do'koni",
-      storeSub: "Yig'gan ballaringizni ajoyib sovg'alarga almashtiring!",
+      storeSub: "Yig'gan mablag'laringizni ajoyib sovg'alarga almashtiring!",
       yourBalance: "Sizning balansingiz:",
-      points: "ball",
+      points: "$", // 💡 ball -> $ ga o'zgartirildi
       availablePrizes: "Mavjud sovg'alar",
       noPrizes: "Hozircha do'konda sovg'alar yo'q.",
       orderHistory: "Buyurtmalaringiz tarixi",
-      noOrders: "Sizda hali buyurtmalar mavjud emas.",
+      noOrders: "Sizda hali buyurtmalar magvjud emas.",
       thName: "Sovg'a nomi",
-      thPoints: "Sarflangan ball",
+      thPoints: "Sarflangan mablag'",
       thDate: "Sana",
       thStatus: "Status",
       deletedPrize: "O'chirilgan mahsulot",
@@ -32,31 +32,31 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
       statusApproved: "Topshirildi",
       statusRejected: "Rad etildi",
       btnLoading: "Yuborilmoqda...",
-      btnNotAvailable: "Do'kon yopiq ",
+      btnNotAvailable: "Do'kon yopiq",
       btnBuy: "Sotib olish",
-      btnNoPoints: "Ball yetarli emas",
+      btnNoPoints: "Mablag' yetarli emas", // 💡 Ball -> Mablag'
       toastFetchError: "Ma'lumotlarni yuklashda xatolik: ",
       toastStockOut: "Kechirasiz, bu mahsulot sotuvda tugagan yoki admin tomonidan muzlatilgan! 🔒",
-      toastNoPoints: "Kechirasiz, balansingizda yetarli ball mavjud emas! 😔",
+      toastNoPoints: "Kechirasiz, balansingizda yetarli mablag' mavjud emas! 😔",
       toastSuccess: "Buyurtma qabul qilindi! Admin tasdiqlashini kuting. 🎁",
       toastError: "Xatolik yuz berdi: ",
       confirmPrefix: '"',
       confirmSuffix: '" sovg\'asini ',
-      viewOrdersBtn: "Buyurtmalar tarixini ko'rish", // 💡 Yangi tarjima
-      closeOrdersBtn: "Tarixni yopish" // 💡 Yangi tarjima
+      viewOrdersBtn: "Buyurtmalar tarixini ko'rish", 
+      closeOrdersBtn: "Tarixni yopish" 
     },
     ru: {
       backBtn: "Вернуться на главную", 
       storeTitle: "🎁 Магазин подарков",
-      storeSub: "Обменивайте накопленные баллы на отличные подарки!",
+      storeSub: "Обменивайте накопленные средства на отличные подарки!",
       yourBalance: "Ваш баланс:",
-      points: "балл",
+      points: "$", // 💡 балл -> $ ga o'zgartirildi
       availablePrizes: "Доступные подарки",
       noPrizes: "В магазине пока нет подарков.",
       orderHistory: "История ваших заказов",
       noOrders: "У вас еще нет заказов.",
       thName: "Название подарка",
-      thPoints: "Потраченные баллы",
+      thPoints: "Потраченные средства",
       thDate: "Дата",
       thStatus: "Статус",
       deletedPrize: "Удаленный товар",
@@ -66,16 +66,16 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
       btnLoading: "Отправка...",
       btnNotAvailable: "Магазин закрыт",
       btnBuy: "Купить",
-      btnNoPoints: "Недостаточно баллов",
+      btnNoPoints: "Недостаточно средств",
       toastFetchError: "Ошибка при загрузке данных: ",
       toastStockOut: "Извините, этот товар закончился или заблокирован админом! 🔒",
-      toastNoPoints: "Извините, на вашем балансе недостаточно баллов! 😔",
+      toastNoPoints: "Извините, на вашем балансе недостаточно средств! 😔",
       toastSuccess: "Заказ принят! Ожидайте подтверждения админа. 🎁",
       toastError: "Произошла ошибка: ",
       confirmPrefix: 'Вы хотите купить подарок "',
       confirmSuffix: '" за ',
-      viewOrdersBtn: "Посмотреть историю заказов", // 💡 Yangi tarjima
-      closeOrdersBtn: "Свернуть историю" // 💡 Yangi tarjima
+      viewOrdersBtn: "Посмотреть историю заказов", 
+      closeOrdersBtn: "Свернуть историю" 
     }
   };
 
@@ -84,7 +84,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
-      // 1. Sovg'alarni yuklash
       const { data: pData, error: pErr } = await supabase
         .from("prizes")
         .select("*")
@@ -92,7 +91,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
       if (pErr) throw pErr;
       setPrizes(pData || []);
 
-      // 2. Foydalanuvchi balansini yuklash
       const { data: profData, error: profErr } = await supabase
         .from("profiles")
         .select("bonus")
@@ -101,7 +99,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
       if (profErr) throw profErr;
       setUserBonus(profData?.bonus || 0);
 
-      // 3. Agar tarix paneli ochiq bo'lsa, buyurtmalarni yuklash
       if (showOrders) {
         const { data: oData, error: oErr } = await supabase
           .from("orders")
@@ -130,9 +127,10 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
       return toast.error(t.toastNoPoints);
     }
 
+    // 💡 Tasdiqlash oynasidagi matn ham dollar ko'rinishiga o'tkazildi
     const confirmMessage = lang === "ru"
-      ? `${t.confirmPrefix}${prize.name}${t.confirmSuffix}${prize.price} ${t.points}?`
-      : `${t.confirmPrefix}${prize.name}${t.confirmSuffix}${prize.price} ${t.points}ga sotib olmoqchimisiz?`;
+      ? `${t.confirmPrefix}${prize.name}${t.confirmSuffix}${prize.price}${t.points}?`
+      : `${t.confirmPrefix}${prize.name}${t.confirmSuffix}${prize.price}${t.points}ga sotib olmoqchimisiz?`;
 
     const confirmBuy = window.confirm(confirmMessage);
     if (!confirmBuy) return;
@@ -177,7 +175,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
   return (
     <div className="user-magazin-container">
       
-      {/* ⬅️ HOME PAGE'GA QAYTISH TUGMASI */}
       {onBack && (
         <div style={{ marginBottom: "15px", display: "flex", justifyContent: "flex-start" }}>
           <button 
@@ -202,7 +199,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
         </div>
       )}
 
-      {/* 💳 Header va Balans qismi */}
       <div className="magazin-header-card">
         <div className="header-info">
           <h2>{t.storeTitle}</h2>
@@ -212,12 +208,12 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
           <FaCoins className="coin-icon" />
           <div className="balance-text">
             <span>{t.yourBalance}</span>
+            {/* 💡 strong tartibi o'zgartirildi: oldin raqam keyin belgi */}
             <strong>{userBonus} {t.points}</strong>
           </div>
         </div>
       </div>
 
-      {/* 🛍 Mahsulotlar panjarasi */}
       <h3 className="section-title"><FaShoppingBag /> {t.availablePrizes}</h3>
       <div className="prizes-grid">
         {prizes.length === 0 ? (
@@ -244,6 +240,7 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
                 <div className="prize-details">
                   <h4>{prize.name}</h4>
                   <div className="prize-price-tag">
+                    {/* 💡 Narxlar yonidagi yozuvlar ham o'zgartirildi */}
                     <FaCoins /> {prize.price} {t.points}
                   </div>
                   
@@ -267,11 +264,9 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
         )}
       </div>
 
-      {/* 📥 Foydalanuvchining shaxsiy buyurtmalari tarixi */}
       <h3 className="section-title"><FaClock /> {t.orderHistory}</h3>
       
       {!showOrders ? (
-        /* 🔘 Boshida faqat shu tugma turadi va bosilganda tarix yuklanadi */
         <div style={{ textAlign: "center", padding: "30px 20px" }}>
           <button 
             className="view-orders-trigger-btn"
@@ -295,7 +290,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
           </button>
         </div>
       ) : (
-        /* 📜 Tugma bosilgandan keyin yuklanadigan jadval */
         <div className="orders-history-card">
           {myOrders.length === 0 ? (
             <p className="empty-text">{t.noOrders}</p>
@@ -315,7 +309,8 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
                     {myOrders.map((order) => (
                       <tr key={order.id}>
                         <td><strong>{order.prizes?.name || t.deletedPrize}</strong></td>
-                        <td className="table-price"><FaCoins /> {order.prizes?.price || 0}</td>
+                        {/* 💡 Jadval ichidagi ball so'zi o'rniga $ belgisi qo'yildi */}
+                        <td className="table-price">{order.prizes?.price || 0} {t.points}</td>
                         <td>{new Date(order.created_at).toLocaleDateString(lang === "ru" ? "ru-RU" : "uz-UZ")}</td>
                         <td>
                           <span className={`user-status-badge ${order.status}`}>
@@ -330,7 +325,6 @@ export default function UserMagazin({ currentUser, lang = "uz", onBack }) {
                 </table>
               </div>
               
-              {/* Tarixni qayta yopish tugmasi */}
               <div style={{ textAlign: "center", marginTop: "15px" }}>
                 <button 
                   style={{

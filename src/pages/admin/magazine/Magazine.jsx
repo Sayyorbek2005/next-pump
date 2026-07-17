@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../../supabase/client";
 import { toast } from "react-toastify";
 import { FaPlus, FaCheck, FaTimes, FaTrash, FaImage, FaUpload, FaSnowflake, FaFire } from "react-icons/fa";
@@ -15,7 +15,7 @@ export default function MagazinTab({ lang = "uz" }) {
   const [uploading, setUploading] = useState(false);
   const [globalLoading, setGlobalLoading] = useState(false);
 
-  // 🌍 Ko'p tilli matnlar lug'ati (Translations Array/Object)
+  // 🌍 Ko'p tilli matnlar lug'ati (Barcha qismlar dollar tizimiga o'tkazildi)
   const translations = {
     uz: {
       title: "🎁 Sovg'alar Do'koni (Admin Panel)",
@@ -25,7 +25,7 @@ export default function MagazinTab({ lang = "uz" }) {
       opening: "Yoqilmoqda...",
       addNewPrize: "Yangi sovg'a e'lon qilish",
       prizeName: "Sovg'a nomi",
-      ballPrice: "Ball narxi (Masalan: 15)",
+      dollarPrice: "Narxi (Masalan: 15$)",
       quantity: "Soni (Zaxira)",
       uploadingImg: "Rasm yuklanmoqda...",
       chooseImg: "Rasm tanlash",
@@ -42,7 +42,7 @@ export default function MagazinTab({ lang = "uz" }) {
       thMaster: "Usta (Foydalanuvchi)",
       thPhone: "Telefon",
       thItem: "So'ralgan narsa",
-      thPrice: "Ketti (Ball)",
+      thPrice: "Ketgan mablag' (Dollar)",
       thStatus: "Status",
       thAction: "Amal",
       stApproved: "Tasdiqlandi",
@@ -61,7 +61,7 @@ export default function MagazinTab({ lang = "uz" }) {
       toastDeleted: "Sovg'a o'chirib tashlandi.",
       toastStatusChanged: "Buyurtma holati o'zgardi: ",
       confirmFreezeAll: "Haqiqatdan ham do'kondagi BARCHA mahsulotlarni birdaniga muzlatmoqchimisiz?",
-      confirmActivateAll: "Haqiqatdan ham barcha mahsulotlarni jilddan sotuvga chiqarmoqchimisiz? (Har biriga 10 tadan joylanadi)",
+      confirmActivateAll: "Haqiqatdan ham barcha mahsulotlarni qaytadan sotuvga chiqarmoqchimisiz? (Har biriga 10 tadan joylanadi)",
       confirmDelete: "Haqiqatdan ham bu sovg'ani do'kondan o'chirmoqchimisiz?"
     },
     ru: {
@@ -72,7 +72,7 @@ export default function MagazinTab({ lang = "uz" }) {
       opening: "Включается...",
       addNewPrize: "Объявить новый подарок",
       prizeName: "Название подарка",
-      ballPrice: "Цена в баллах (Например: 15)",
+      dollarPrice: "Цена в долларах (Например: 15$)",
       quantity: "Количество (Запас)",
       uploadingImg: "Загрузка изображения...",
       chooseImg: "Выбрать изображение",
@@ -83,13 +83,13 @@ export default function MagazinTab({ lang = "uz" }) {
       inStock: "В продаже",
       outOfStock: "Нет в продаже (Заморожен)",
       freeze: "Заморозить",
-      activate: "Активировать",
+      activate: "Aктивировать",
       delete: "Удалить",
       incomingOrders: "📥 Поступившие запросы",
       thMaster: "Мастер (Пользователь)",
       thPhone: "Телефон",
       thItem: "Запрошенный товар",
-      thPrice: "Списано (Баллы)",
+      thPrice: "Списано (Доллары)",
       thStatus: "Статус",
       thAction: "Действие",
       stApproved: "Одобрено",
@@ -115,8 +115,7 @@ export default function MagazinTab({ lang = "uz" }) {
 
   const t = translations[lang] || translations.uz;
 
-  // Ma'lumotlarni yuklash
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const { data: prizesData, error: pErr } = await supabase
         .from("prizes")
@@ -135,14 +134,12 @@ export default function MagazinTab({ lang = "uz" }) {
     } catch (err) {
       toast.error(t.toastLoadError + err.message);
     }
-  };
+  }, [t.toastLoadError]);
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang]);
+  }, [fetchData]);
 
-  // 📷 Rasmni Supabase Storage-ga yuklash
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -174,7 +171,6 @@ export default function MagazinTab({ lang = "uz" }) {
     }
   };
 
-  // 🔄 Bitta mahsulotni muzlatish / aktiv qilish
   const toggleStockStatus = async (id, currentStock) => {
     try {
       const newStock = currentStock > 0 ? 0 : 10; 
@@ -191,7 +187,6 @@ export default function MagazinTab({ lang = "uz" }) {
     }
   };
 
-  // ❄️ HAMMASINI BIR DANIGA MUZLATISH FUNKSIYASI
   const freezeAllPrizes = async () => {
     if (!window.confirm(t.confirmFreezeAll)) return;
     setGlobalLoading(true);
@@ -211,7 +206,6 @@ export default function MagazinTab({ lang = "uz" }) {
     }
   };
 
-  // 🔥 HAMMASINI BIR DANIGA FAOLLASHTIRISH FUNKSIYASI
   const activateAllPrizes = async () => {
     if (!window.confirm(t.confirmActivateAll)) return;
     setGlobalLoading(true);
@@ -231,7 +225,6 @@ export default function MagazinTab({ lang = "uz" }) {
     }
   };
 
-  // Yangi sovg'a qo'shish
   const addPrize = async () => {
     if (!name.trim() || !price || !stock) return toast.error(t.toastFieldsError);
     setLoading(true);
@@ -259,7 +252,6 @@ export default function MagazinTab({ lang = "uz" }) {
     }
   };
 
-  // Sovg'ani o'chirish
   const deletePrize = async (id) => {
     if (!window.confirm(t.confirmDelete)) return;
     try {
@@ -272,7 +264,6 @@ export default function MagazinTab({ lang = "uz" }) {
     }
   };
 
-  // Buyurtma statusini yangilash
   const updateOrderStatus = async (order, newStatus) => {
     try {
       if (newStatus === "rejected") {
@@ -303,7 +294,7 @@ export default function MagazinTab({ lang = "uz" }) {
     <div className="magazin-admin">
       <h2>{t.title}</h2>
       
-      {/* 🚨 GLOBAL BOSHQARUV TUGMALARI BLOKI */}
+      {/* GLOBAL BOSHQARUV TUGMALARI BLOKI */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "20px", background: "#f8fafc", padding: "15px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
         <button 
           onClick={freezeAllPrizes} 
@@ -329,7 +320,7 @@ export default function MagazinTab({ lang = "uz" }) {
           
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <input value={name} placeholder={t.prizeName} onChange={(e) => setName(e.target.value)} style={{ flex: 2 }} />
-            <input value={price} type="number" placeholder={t.ballPrice} onChange={(e) => setPrice(e.target.value)} style={{ flex: 1 }} />
+            <input value={price} type="number" placeholder={t.dollarPrice} onChange={(e) => setPrice(e.target.value)} style={{ flex: 1 }} />
             <input value={stock} type="number" placeholder={t.quantity} onChange={(e) => setStock(e.target.value)} style={{ flex: 1 }} />
           </div>
 
@@ -369,7 +360,8 @@ export default function MagazinTab({ lang = "uz" }) {
                 )}
               </div>
               <h4 style={{ margin: "5px 0", fontSize: "16px", color: "#0f172a" }}>{p.name}</h4>
-              <span style={{ fontSize: "14px", fontWeight: "600", color: "#2563eb", display: "block" }}>{p.price} ball</span>
+              
+              <span style={{ fontSize: "14px", fontWeight: "600", color: "#2563eb", display: "block" }}>{p.price}$</span>
               
               <span style={{ fontSize: "12px", fontWeight: "500", color: p.stock > 0 ? "#16a34a" : "#dc2626", display: "block", margin: "6px 0 12px 0" }}>
                 {p.stock > 0 ? `${t.inStock}: ${p.stock} ta` : t.outOfStock}
@@ -413,7 +405,7 @@ export default function MagazinTab({ lang = "uz" }) {
               <td>{o.profiles?.full_name || "Noma'lum"}</td>
               <td>{o.profiles?.phone || "-"}</td>
               <td>{o.prizes?.name || "O'chirilgan"}</td>
-              <td>{o.prizes?.price || 0}</td>
+              <td>{o.prizes?.price ? `${o.prizes.price}$` : "0$"}</td>
               <td>
                 <span className={`status-text ${o.status}`}>
                   {o.status === "approved" ? t.stApproved : o.status === "rejected" ? t.stRejected : t.stPending}
