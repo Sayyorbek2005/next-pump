@@ -14,7 +14,6 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
   const [loadingCodes, setLoadingCodes] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 🌍 Ustalar bo'limi uchun ko'p tillilik lug'ati
   const translations = {
     uz: {
       backToList: "Ro'yxatga qaytish",
@@ -41,7 +40,7 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
       thPhone: "Telefon Raqami",
       thRegion: "Viloyat / Tuman",
       thScore: "To'plangan Ball",
-      thMasterStatus: "Holati", // 🌟 Duplikat kalit o'zgartirildi
+      thMasterStatus: "Holati",
       thProfile: "Profil",
       actionActive: "Faol",
       actionInactive: "Yopiq",
@@ -74,7 +73,7 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
       thPhone: "Номер телефона",
       thRegion: "Регион / Район",
       thScore: "Набранные баллы",
-      thMasterStatus: "Статус", // 🌟 Duplikat kalit o'zgartirildi
+      thMasterStatus: "Статус",
       thProfile: "Профиль",
       actionActive: "Активен",
       actionInactive: "Закрыт",
@@ -111,7 +110,6 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
     }
   };
 
-  // 🔍 Qidiruv tizimi
   const filteredMasters = mastersList.filter((master) => {
     const fullName = (master.full_name || "").toLowerCase();
     const phone = (master.phone || "").toLowerCase();
@@ -157,32 +155,37 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
           </div>
         </div>
 
+        {/* 📊 Tuzatilgan Statistika vidjetlari */}
         <div className="detail-stats-grid">
+          
+          {/* 1-Karta: Mahsulotlar */}
           <div className="detail-stat-item-card">
             <div className="card-icon-wrap blue-bg">
               <FaBarcode />
             </div>
-            <div className="card-icon-wrap">
+            <div className="card-stat-value-wrap">
               <span>{t.totalScanned}</span>
               <h3>{scannedCodes.length} {t.unitProducts}</h3>
             </div>
           </div>
 
+          {/* 2-Karta: Bonus */}
           <div className="detail-stat-item-card">
             <div className="card-icon-wrap gold-bg">
               <FaAward />
             </div>
-            <div className="card-icon-wrap">
+            <div className="card-stat-value-wrap">
               <span>{t.totalBonus}</span>
               <h3 className="gold-text">{selectedMaster.bonus || 0} {t.unitBall}</h3>
             </div>
           </div>
 
+          {/* 3-Karta: Hudud */}
           <div className="detail-stat-item-card">
             <div className="card-icon-wrap green-bg">
               <FaMapMarkerAlt />
             </div>
-            <div className="card-icon-wrap">
+            <div className="card-stat-value-wrap">
               <span>{t.serviceRegion}</span>
               <h3>
                 {selectedMaster.region 
@@ -191,6 +194,7 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
               </h3>
             </div>
           </div>
+
         </div>
 
         <div className="history-table-section-card">
@@ -267,7 +271,7 @@ export default function MastersTab({ mastersList = [], toggleMasterStatus, lang 
               <th>{t.thPhone}</th>
               <th>{t.thRegion}</th>
               <th>{t.thScore}</th>
-              <th>{t.thMasterStatus}</th> {/* 🌟 Yangi kalit nomi ulandi */}
+              <th>{t.thMasterStatus}</th>
               <th>{t.thProfile}</th>
             </tr>
           </thead>

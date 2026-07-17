@@ -2,7 +2,6 @@
    📌 USTALAR JADVALI VA BAZASI STYLES (ustalar.css) - FULL RESPONSIVE
    ========================================================================== */
 
-/* ✨ SAHIFALAR ALMASHGANDAGI SILLIQ O'TISH ANIMATSIYASI (FADE-IN) */
 .fade-in-tab {
   animation: fadeEffect 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -18,7 +17,6 @@
   }
 }
 
-/* Asosiy konteyner chetga chiqib ketmasligi uchun */
 .tab-section {
   width: 100%;
   max-width: 100%;
@@ -34,7 +32,7 @@
   color: #0f172a;
 }
 
-/* 🔍 QIDIRUV (SEARCH) TIZIMI STILLARI */
+/* 🔍 QIDIRUV (SEARCH) STILLARI */
 .table-header-flex {
   display: flex;
   justify-content: space-between;
@@ -156,7 +154,7 @@
   transform: scale(0.97);
 }
 
-/* 🛠️ GORIZONTAL SCROLL WRAPPERLARI */
+/* 🛠️ SCROLL WRAPPER */
 .custom-table-wrapper,
 .detail-table-wrapper {
   width: 100% !important;
@@ -200,7 +198,7 @@
 }
 
 /* ==========================================================================
-   📌 DETAL PROFIL ELEMENTLARI
+   📌 DETAL PROFIL ELEMENTLARI (TUZATILGAN QISMI)
    ========================================================================== */
 .back-to-list-btn {
   display: inline-flex;
@@ -305,9 +303,10 @@
   font-weight: 700;
 }
 
+/* 📊 STATISTIKA VIDJETLARI TARTIBI */
 .detail-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
@@ -321,6 +320,7 @@
   align-items: center;
   gap: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
 .card-icon-wrap {
@@ -339,18 +339,35 @@
 .green-bg { background: #f0fdf4; color: #16a34a; }
 .gold-text { color: #ca8a04; }
 
+/* 📝 MATNLAR BLOCKI (Ustma-ust tushishni oldini oladi) */
+.card-stat-value-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
 .card-stat-value-wrap span {
   font-size: 13px;
   color: #64748b;
-  display: block;
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
 }
 
 .card-stat-value-wrap h3 {
-  margin: 2px 0 0 0;
+  margin: 0;
+  padding: 0;
   font-size: 18px;
   font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  white-space: normal; /* Matnlar pastga chiroyli tushishi uchun */
 }
 
+/* 📋 JADVAL */
 .history-table-section-card {
   background: #ffffff;
   padding: 28px;
@@ -408,7 +425,7 @@
 }
 
 /* ==========================================================================
-   📱 PLANSHET VA MOBIL MOSLASHUVCHANLIK (RESPONSIVE)
+   📱 MOBIL QURILMALAR UCHUN MOSLASHTIRISH
    ========================================================================== */
 @media (max-width: 1024px) {
   .master-profile-main-card,

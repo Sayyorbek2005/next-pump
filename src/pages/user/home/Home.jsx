@@ -68,7 +68,7 @@ const translations = {
     adminTips: "Советы от Админа",
     noTips: "Советы отсутствуют.",
     yearLabel: "Год",
-    monthLabel: "Month",
+    monthLabel: "Месяц", // Fixed: "Month" -> "Месяц"
     collectedPoints: "Собранные баллы",
     points: "балл",
     activityStat: "Статистика активности",
@@ -100,9 +100,34 @@ const translations = {
 const monthsUzDefault = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
 const monthsRu = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
+// 🎛 Static Inline uslublarni komponent tashqarisiga olib chiqdik (Ishlash unumdorligini oshirish uchun)
+const navContainerStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: "10px",
+  marginTop: "4px",
+  marginBottom: "10px", 
+  background: "#ffffff",
+  padding: "12px",
+  borderRadius: "16px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+  border: "1px solid #e2e8f0"
+};
+
+const activeNavButtonStyle = {
+  display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+  background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff",
+  border: "none", padding: "12px 8px", borderRadius: "12px", cursor: "pointer", fontWeight: "600"
+};
+
+const inactiveNavButtonStyle = {
+  display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+  background: "#f1f5f9", color: "#334155",
+  border: "none", padding: "12px 8px", borderRadius: "12px", cursor: "pointer", fontWeight: "600"
+};
+
 export default function HomeTab({ 
   userId = "", 
-  currentBonus = 0, 
   rank = 1,
   confirmedCount = 0,
   pendingCount = 0,
@@ -126,7 +151,6 @@ export default function HomeTab({
   const [chartStats, setChartStats] = useState([]);
   const [monthlyTotalCodes, setMonthlyTotalCodes] = useState(0);
   const [monthlyAverageBonus, setMonthlyAverageBonus] = useState(0);
-
   const [isShopsOpen, setIsShopsOpen] = useState(false);
 
   const t = translations[lang] || translations["uz"];
@@ -211,7 +235,6 @@ export default function HomeTab({
           .lt("created_at", endDate);
 
         if (error) throw error;
-
         if (!isMounted) return;
 
         const approvedCodes = codes ? codes.filter(c => c.status === "approved" || c.status === "confirmed") : [];
@@ -290,8 +313,7 @@ export default function HomeTab({
 
     fetchRealStatistics();
     return () => { isMounted = false; };
-  },);
-  // ? [year, month, statType, userId, lang, monthsUz] 
+  }, [year, month, statType, userId, lang, monthsUz, t.monthLabels, t.weekLabels]); // Added missing dependencies to avoid Warnings
 
   const handleOpenModal = (data, type) => {
     setModalData(data);
@@ -343,25 +365,10 @@ export default function HomeTab({
 
       <div className="white-content-body">
         {/* 4 Talik Navigatsiya bloki */}
-        <div className="home-embedded-sidebar" style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "10px",
-          marginTop: "4px",
-          marginBottom: "10px", 
-          background: "#ffffff",
-          padding: "12px",
-          borderRadius: "16px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-          border: "1px solid #e2e8f0"
-        }}>
+        <div className="home-embedded-sidebar" style={navContainerStyle}>
           <button 
             onClick={() => setActiveTab && setActiveTab("home")} 
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-              background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff",
-              border: "none", padding: "12px 8px", borderRadius: "12px", cursor: "pointer", fontWeight: "600"
-            }}
+            style={activeNavButtonStyle}
           >
             <FaHome size={18} />
             <span style={{ fontSize: "11px" }}>{t.navHome}</span>
@@ -369,11 +376,7 @@ export default function HomeTab({
 
           <button 
             onClick={() => setActiveTab && setActiveTab("code")} 
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-              background: "#f1f5f9", color: "#334155",
-              border: "none", padding: "12px 8px", borderRadius: "12px", cursor: "pointer", fontWeight: "600"
-            }}
+            style={inactiveNavButtonStyle}
           >
             <FaKey size={18} style={{ color: "#2563eb" }} />
             <span style={{ fontSize: "11px" }}>{t.navCode}</span>
@@ -381,11 +384,7 @@ export default function HomeTab({
 
           <button 
             onClick={() => setActiveTab && setActiveTab("katalog")} 
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-              background: "#f1f5f9", color: "#334155",
-              border: "none", padding: "12px 8px", borderRadius: "12px", cursor: "pointer", fontWeight: "600"
-            }}
+            style={inactiveNavButtonStyle}
           >
             <FaBookOpen size={18} style={{ color: "#059669" }} />
             <span style={{ fontSize: "11px" }}>{t.navCatalog}</span>
@@ -393,18 +392,14 @@ export default function HomeTab({
 
           <button 
             onClick={() => setActiveTab && setActiveTab("magazin")} 
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-              background: "#f1f5f9", color: "#334155",
-              border: "none", padding: "12px 8px", borderRadius: "12px", cursor: "pointer", fontWeight: "600"
-            }}
+            style={inactiveNavButtonStyle}
           >
             <FaGift size={18} style={{ color: "#d97706" }} />
             <span style={{ fontSize: "11px" }}>{t.navShop}</span>
           </button>
         </div>
 
-        {/* BIZNING DO'KONIMIZ TUGMASI */}
+        {/* BIZNING DO'KONIMIZ TUGMASI (Active scale effekti home.css dagi klass orqali berilishi tavsiya etiladi) */}
         <div style={{ padding: "0 4px", marginBottom: "20px" }}>
           <button 
             onClick={() => setIsShopsOpen(true)}
@@ -419,11 +414,8 @@ export default function HomeTab({
               padding: "14px 20px",
               borderRadius: "16px",
               cursor: "pointer",
-              boxShadow: "0 6px 16px rgba(16, 185, 129, 0.25)",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              boxShadow: "0 6px 16px rgba(16, 185, 129, 0.25)"
             }}
-            onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.98)"}
-            onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}>
               <div style={{
@@ -572,7 +564,7 @@ export default function HomeTab({
         <div className="home-modal-overlay" onClick={() => setIsShopsOpen(false)} style={{ zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="home-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px", width: "90%", borderRadius: "24px", overflow: "hidden", padding: 0 }}>
             
-            {/* Modal Sarlavhasi (Header) */}
+            {/* Modal Sarlavhasi */}
             <div style={{
               background: "#f1f5f9",
               padding: "18px 24px",
@@ -626,7 +618,7 @@ export default function HomeTab({
                   </p>
                 </div>
 
-                {/* Yandex Xaritaga yo'naltiruvchi chiroyli tugma */}
+                {/* Yandex Xarita havolasi */}
                 <a 
                   href="https://yandex.uz/maps/org/climate_house/222102114104/?ll=66.941871%2C39.678287&z=16" 
                   target="_blank" 
@@ -644,11 +636,8 @@ export default function HomeTab({
                     borderRadius: "14px",
                     fontSize: "14px",
                     fontWeight: "600",
-                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
-                    transition: "transform 0.1s ease"
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)"
                   }}
-                  onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.97)"}
-                  onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
                 >
                   <FaMapMarkerAlt />
                   {t.openMapBtn}
