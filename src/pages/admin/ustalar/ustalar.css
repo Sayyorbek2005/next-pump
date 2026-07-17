@@ -1,7 +1,6 @@
 /* ==========================================================================
-   📌 USTALAR JADVALI VA BAZASI STYLES (ustalar.css) - FULL RESPONSIVE
+   📌 1. ANIMATSIYA VA ASOSIY TAB SECTION
    ========================================================================== */
-
 .fade-in-tab {
   animation: fadeEffect 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -32,7 +31,9 @@
   color: #0f172a;
 }
 
-/* 🔍 QIDIRUV (SEARCH) STILLARI */
+/* ==========================================================================
+    🔍 QIDIRUV (SEARCH) STILLARI
+    ========================================================================== */
 .table-header-flex {
   display: flex;
   justify-content: space-between;
@@ -80,7 +81,60 @@
   pointer-events: none;
 }
 
-/* 📋 JADVAL ELEMENTLARI STILLARI */
+/* ==========================================================================
+    📋 JADVAL ELEMENTLARI VA IXCHAM USTUNLAR (MUKAMMAL ZICH TIZIM)
+    ========================================================================== */
+.custom-table-wrapper,
+.detail-table-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  display: block !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.custom-table,
+.detail-custom-table {
+  width: 100% !important;
+  table-layout: auto !important; /* 🌟 Ustunlar o'z o'lchamiga qarab ixchamlashadi */
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* 🌟 Har bir ustun kengligini qat'iy va zich qilamiz (Ko'rish tugmasi sig'ishi uchun) */
+.custom-table th:nth-child(1), .custom-table td:nth-child(1) { width: 50px; text-align: center; } /* # */
+.custom-table th:nth-child(2), .custom-table td:nth-child(2) { max-width: 180px; white-space: normal; } /* F.I.Sh */
+.custom-table th:nth-child(3), .custom-table td:nth-child(3) { width: 130px; } /* Telefon */
+.custom-table th:nth-child(4), .custom-table td:nth-child(4) { width: 150px; white-space: normal; } /* Viloyat */
+.custom-table th:nth-child(5), .custom-table td:nth-child(5) { width: 110px; text-align: center; } /* Ball */
+.custom-table th:nth-child(6), .custom-table td:nth-child(6) { width: 120px; text-align: center; } /* Holati */
+.custom-table th:nth-child(7), .custom-table td:nth-child(7) { width: 90px; text-align: center; }  /* Profil (Ko'rish) */
+
+.custom-table th,
+.detail-custom-table th {
+  background: #f8fafc;
+  padding: 12px 10px; /* 🌟 Paddinglar 20px dan 10px ga qisqartirildi, shunda yonga cho'zilmaydi */
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap !important;
+}
+
+.custom-table td,
+.detail-custom-table td {
+  padding: 12px 10px; /* 🌟 Paddinglar qisqartirildi */
+  font-size: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  vertical-align: middle;
+}
+
 .master-name {
   font-weight: 700;
   color: #0f172a;
@@ -89,10 +143,10 @@
 .master-score {
   background-color: rgba(37, 99, 235, 0.1);
   color: #2563eb;
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   display: inline-block;
   white-space: nowrap;
 }
@@ -101,14 +155,14 @@
   background-color: #f1f5f9;
   color: #475569;
   border: 1px solid #cbd5e1;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -116,15 +170,16 @@
 .status-toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 .status-toggle-btn.active { color: #10b981; }
 .status-toggle-btn.inactive { color: #ef4444; }
@@ -154,52 +209,9 @@
   transform: scale(0.97);
 }
 
-/* 🛠️ SCROLL WRAPPER */
-.custom-table-wrapper,
-.detail-table-wrapper {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: auto !important;
-  display: block !important;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background-color: #ffffff;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-  box-sizing: border-box;
-}
-
-.custom-table,
-.detail-custom-table {
-  width: 100% !important;
-  min-width: 780px !important;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.custom-table th,
-.detail-custom-table th {
-  background: #f8fafc;
-  padding: 14px 20px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #475569;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap !important;
-}
-
-.custom-table td,
-.detail-custom-table td {
-  padding: 14px 20px;
-  font-size: 14px;
-  border-bottom: 1px solid #e2e8f0;
-  color: #334155;
-  white-space: nowrap !important;
-}
-
 /* ==========================================================================
-   📌 DETAL PROFIL ELEMENTLARI (TUZATILGAN QISMI)
-   ========================================================================== */
+    📌 DETAL PROFIL ELEMENTLARI
+    ========================================================================== */
 .back-to-list-btn {
   display: inline-flex;
   align-items: center;
@@ -303,7 +315,7 @@
   font-weight: 700;
 }
 
-/* 📊 STATISTIKA VIDJETLARI TARTIBI */
+/* 📊 STATISTIKA VIDJETLARI */
 .detail-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -339,7 +351,6 @@
 .green-bg { background: #f0fdf4; color: #16a34a; }
 .gold-text { color: #ca8a04; }
 
-/* 📝 MATNLAR BLOCKI (Ustma-ust tushishni oldini oladi) */
 .card-stat-value-wrap {
   display: flex;
   flex-direction: column;
@@ -364,10 +375,9 @@
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
-  white-space: normal; /* Matnlar pastga chiroyli tushishi uchun */
+  white-space: normal;
 }
 
-/* 📋 JADVAL */
 .history-table-section-card {
   background: #ffffff;
   padding: 28px;
@@ -425,7 +435,7 @@
 }
 
 /* ==========================================================================
-   📱 MOBIL QURILMALAR UCHUN MOSLASHTIRISH
+   📱 MOBIL QURILMALAR VA TELEFONDA 480PX UCHUN JADVAL REJIMINI SAQLASH
    ========================================================================== */
 @media (max-width: 1024px) {
   .master-profile-main-card,
@@ -464,14 +474,21 @@
   }
 }
 
-@media (max-width: 520px) {
+/* 🌟 Telefon rejimida (480px va undan pastda) jadval uzunchoq chiroyli holatda qoladi */
+@media (max-width: 480px) {
   .tab-section {
-    padding: 6px !important;
+    padding: 4px !important;
   }
 
   .tab-section h3 {
     font-size: 18px !important;
     margin-bottom: 12px !important;
+  }
+
+  /* Telefon ekranida jadval siqilib elementlar bir-biriga kirmasligi uchun minimal kenglik */
+  .custom-table,
+  .detail-custom-table {
+    min-width: 720px !important; 
   }
 
   .master-profile-main-card,
@@ -498,9 +515,10 @@
     border-radius: 12px !important;
   }
 
+  /* Paddinglarni minimal darajada ushlaymiz, tugmalar yonga chiqib ketmaydi */
   .custom-table th, .custom-table td,
   .detail-custom-table th, .detail-custom-table td {
-    padding: 10px 12px !important;
+    padding: 10px 8px !important;
     font-size: 13px !important;
   }
 
@@ -508,5 +526,20 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px !important;
+  }
+
+  /* Skrollbarni juda chiroyli va ingichka rejimga keltiramiz */
+  .custom-table-wrapper::-webkit-scrollbar,
+  .detail-table-wrapper::-webkit-scrollbar {
+    height: 4px;
+  }
+  .custom-table-wrapper::-webkit-scrollbar-track,
+  .detail-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  .custom-table-wrapper::-webkit-scrollbar-thumb,
+  .detail-table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
   }
 }

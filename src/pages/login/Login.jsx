@@ -7,23 +7,20 @@ import "./login.css";
 export default function Login() {
   const [phone, setPhone] = useState("+998 ");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(true); // Sahifa yuklanganda tekshiruv tugaguncha true bo'ladi
+  const [isLoading, setIsLoading] = useState(true); 
   const navigate = useNavigate();
 
   useEffect(() => {
     const autoLoginWithTelegram = async () => {
-      // 1. Telegram Web App obyekti va foydalanuvchi ma'lumotlarini olamiz
       const tg = window.Telegram?.WebApp;
       const tgUser = tg?.initDataUnsafe?.user;
 
-      // Agar foydalanuvchi haqiqatdan ham Telegram orqali kirgan bo'lsa
       if (tgUser && tgUser.id) {
         try {
-          // 2. Supabase-dan Telegram ID bo'yicha foydalanuvchini qidiramiz
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
-            .eq("telegram_id", tgUser.id) // Bot orqali saqlangan telegram_id ustuni bilan solishtiradi
+            .eq("telegram_id", String(tgUser.id)) 
             .maybeSingle();
 
           if (error) {
@@ -32,24 +29,21 @@ export default function Login() {
             return;
           }
 
-          // 3. Agar foydalanuvchi bazada bor bo'lsa, uni avtomatik kiritamiz
-          if (data) {
+          if (data && data.region && data.job) {
             localStorage.setItem("user", JSON.stringify(data));
             toast.success("Xush kelibsiz!");
             
             if (data.role === "admin") {
-              navigate("/admin-dashboard");
+              navigate("/admin-dashboard", { replace: true });
             } else {
-              navigate("/user-dashboard");
+              navigate("/user-dashboard", { replace: true });
             }
-            return; // Kodni shu yerda to'xtatamiz, pastdagi isLoading(false) ishlamaydi
+            return; 
           }
         } catch (err) {
           console.error("Avto-login xatoligi yuz berdi:", err);
         }
       }
-      
-      // Agar Telegram ID topilmasa yoki xatolik bo'lsa, yuklanishni o'chiramiz va login formasini ko'rsatamiz
       setIsLoading(false);
     };
 
@@ -88,23 +82,19 @@ export default function Login() {
       return;
     }
 
-    if (password.length < 4) {
-      toast.error("Parol kamida 4 ta belgi bo‘lishi kerak.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
+      // To'g'ridan-to'g'ri telefon raqami va parolni solishtirib qidiramiz
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("phone", cleanPhone)
-        .eq("password", password)
+        .eq("password", password.trim()) 
         .maybeSingle();
 
       if (error) {
-        toast.error("Server xatolik!");
+        toast.error("Serverda xatolik yuz berdi!");
         return;
       }
 
@@ -113,24 +103,23 @@ export default function Login() {
         return;
       }
 
-      // Agar birinchi marta login qilayotgan bo'lsa va Telegram ID hali bog'lanmagan bo'lsa:
       const tg = window.Telegram?.WebApp;
       const tgUser = tg?.initDataUnsafe?.user;
       if (tgUser && tgUser.id && !data.telegram_id) {
         await supabase
           .from("profiles")
-          .update({ telegram_id: tgUser.id })
+          .update({ telegram_id: String(tgUser.id) })
           .eq("id", data.id);
-        data.telegram_id = tgUser.id;
+        data.telegram_id = String(tgUser.id);
       }
 
       localStorage.setItem("user", JSON.stringify(data));
       toast.success("Xush kelibsiz!");
 
       if (data.role === "admin") {
-        navigate("/admin-dashboard");
+        navigate("/admin-dashboard", { replace: true });
       } else {
-        navigate("/user-dashboard");
+        navigate("/user-dashboard", { replace: true });
       }
     } catch (err) {
       toast.error("Kutilmagan xatolik yuz berdi.");
@@ -139,7 +128,6 @@ export default function Login() {
     }
   };
 
-  // Tekshiruv ketayotganda foydalanuvchiga login formasi ko'rinib turmaydi
   if (isLoading) {
     return (
       <div className="auth-page-wrapper">
@@ -183,77 +171,3 @@ export default function Login() {
     </div>
   );
 }
-
-// import { useEffect, useState } from "react";
-// import { supabase } from "../../supabase/client";
-// import { toast } from "react-toastify";
-// import { useNavigate } from "react-router-dom";
-// import "./login.css";
-
-// export default function Login() {
-//   const [statusMessage, setStatusMessage] = useState("Tizimga kirish tekshirilmoqda...");
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     const autoLoginWithTelegram = async () => {
-//       // 1. Telegram Web App obyekti va foydalanuvchi ma'lumotlarini olamiz
-//       const tg = window.Telegram?.WebApp;
-//       const tgUser = tg?.initDataUnsafe?.user;
-
-//       // Agar Telegram orqali ochilgan bo'lsa
-//       if (tgUser && tgUser.id) {
-//         try {
-//           // 2. Supabase-dan Telegram ID bo'yicha foydalanuvchini qidiramiz
-//           const { data, error } = await supabase
-//             .from("profiles")
-//             .select("*")
-//             .eq("telegram_id", tgUser.id)
-//             .maybeSingle();
-
-//           if (error) {
-//             console.error("Supabase xatoligi:", error);
-//             setStatusMessage("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
-//             return;
-//           }
-
-//           // 3. Agar foydalanuvchi bazada mavjud bo'lsa (ya'ni botda kontakt yuborgan bo'lsa)
-//           if (data) {
-//             // Foydalanuvchi ma'lumotlarini brauzer xotirasida (localStorage) saqlaymiz
-//             localStorage.setItem("user", JSON.stringify(data));
-//             toast.success("Xush kelibsiz!");
-            
-//             // Roliga mos dashboardga yo'naltiramiz
-//             if (data.role === "admin") {
-//               navigate("/admin-dashboard");
-//             } else {
-//               navigate("/user-dashboard");
-//             }
-//           } else {
-//             // Agar botda ro'yxatdan o'tmay to'g'ri linkka kirgan bo'lsa
-//             setStatusMessage("Iltimos, avval Telegram botimizga kirib, ro'yxatdan o'ting!");
-//             toast.error("Siz ro'yxatdan o'tmagansiz!");
-//           }
-//         } catch (err) {
-//           console.error("Kutilmagan xatolik:", err);
-//           setStatusMessage("Tizimda xatolik yuz berdi.");
-//         }
-//       } else {
-//         // Agar ilova Telegram ichida emas, oddiy brauzerda ochilgan bo'lsa
-//         setStatusMessage("Iltimos, ushbu ilovani faqat Telegram bot orqali oching.");
-//       }
-//     };
-
-//     autoLoginWithTelegram();
-//   }, [navigate]);
-
-//   return (
-//     <div className="auth-page-wrapper">
-//       <div className="auth" style={{ textAlign: "center", padding: "50px 20px" }}>
-//         <div className="loading-spinner"></div> {/* Agar CSS-da yuklanish animatsiyasi bo'lsa */}
-//         <h3 style={{ marginTop: "20px", color: "#333", fontSize: "18px" }}>
-//           {statusMessage}
-//         </h3>
-//       </div>
-//     </div>
-//   );
-// }
