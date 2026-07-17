@@ -10,7 +10,7 @@ import HomeTab from "../home/Home";
 import CodeTab from "../kodkirish/KodKiritish";
 import SettingsTab from "../setting/Setting";
 import UserMagazin from "../magazine/Magazine"; 
-import UserKatalog from "../../admin/katalog/Katalog"; // 👈 Bu o'sha biz yozgan KatalogTab komponenti bo'lishi kerak
+import UserKatalog from "../../admin/katalog/Katalog"; 
 
 import "./userDash.css";
 
@@ -46,7 +46,7 @@ export default function UserDash() {
   const [lang, setLang] = useState(localStorage.getItem("app_lang") || "uz");
   const navigate = useNavigate();
 
-  // 🔄 Tabni xavfsiz va to'g'ri o'zgartirish funksiyasi
+  // 🔄 Tabni o'zgartirish
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
   };
@@ -277,6 +277,7 @@ export default function UserDash() {
     navigate("/login");
   };
 
+  // 🚀 KOD YUBORILGANDA VA BALANSNI 1 BALGA OSHIRISH MANTIQI
   const handleSendCode = async () => {
     if (loading) return;
     const trimmedCode = bonusCode.trim().toUpperCase();
@@ -286,6 +287,7 @@ export default function UserDash() {
     }
     setLoading(true);
     try {
+      // 1. Promo-kodni tekshirish
       const { data: promoCode, error: promoError } = await supabase
         .from("promo_codes")
         .select("*")
@@ -301,6 +303,7 @@ export default function UserDash() {
         return;
       }
 
+      // 2. used_codes jadvaliga yuborilganini belgilash
       const { error: insertError } = await supabase
         .from("used_codes")
         .insert([{ 
@@ -311,12 +314,27 @@ export default function UserDash() {
 
       if (insertError) throw insertError;
 
+      // 3. Promo-kodni ishsiz (faolmas) holatga keltirish
       await supabase.from("promo_codes").update({ is_active: false }).eq("id", promoCode.id);
 
-      toast.success("Kod muvaffaqiyatli yuborildi! Admin tasdiqlashini kuting. ⏳");
+      // 🌟 4. FOYDALANUVCHINING BALANSIGA +1 BALL QO'SHISH (PROFILES UPDATE)
+      const yangiBonus = (currentUser.bonus || 0) + 1;
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({ bonus: yangiBonus })
+        .eq("id", currentUser.id);
+
+      if (profileUpdateError) throw profileUpdateError;
+
+      // Mahalliy stateni va localStorage-ni tezkor yangilash
+      const updatedUser = { ...currentUser, bonus: yangiBonus };
+      setCurrentUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Kod muvaffaqiyatli yuborildi va profilingizga 1 ball qo'shildi! ⏳");
       setBonusCode("");
       handleTabChange("home");
-      fetchUserData(currentUser, year, month, statType);
+      fetchUserData(updatedUser, year, month, statType);
     } catch (err) {
       toast.error("Xatolik yuz berdi: " + err.message);
     } finally {
@@ -353,7 +371,6 @@ export default function UserDash() {
 
   return (
     <div className="dash-container">
-      {/* 🚀 HEADER PROFIL TUGMASI */}
       <Header 
         lang={lang} 
         setLang={changeLanguage} 
@@ -361,7 +378,6 @@ export default function UserDash() {
         onProfileClick={() => handleTabChange("settings")} 
       />
 
-      {/* 🧭 SIDEBAR KOMPONENTI */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={handleTabChange} 
