@@ -518,7 +518,7 @@ export default function CodeGenerator({ lang = "uz" }) {
         })}
 
         {/* Ishlatilgan kodlar qismi */}
-        <div className="group-batch-card used-codes-special-card">
+        {/* <div className="group-batch-card used-codes-special-card">
           <div className="batch-card-header">
             <div>
               <span className="batch-badge used-badge">{t.summaryBadge}</span>
@@ -558,7 +558,7 @@ export default function CodeGenerator({ lang = "uz" }) {
             <span>{t.totalUsed}</span>
             <span className="used-count-text">{usedCodes.length} {t.unitCodes}</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {showDeleteModal && (
