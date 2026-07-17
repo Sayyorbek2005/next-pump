@@ -126,7 +126,7 @@ export default function CodeGenerator({ lang = "uz" }) {
 
   const t = translations[lang] || translations.uz;
 
-  // 🔄 Supabase'dan 1000 talik limitni range() yordamida aylanib o'tib, barcha ma'lumotlarni yig'ish funksiyasi
+  // 🔄 Supabase'dan barcha ma'lumotlarni yuklash funksiyasi
   const fetchBatches = useCallback(async () => {
     try {
       let allData = [];
@@ -134,7 +134,6 @@ export default function CodeGenerator({ lang = "uz" }) {
       let to = 999;
       let hasMore = true;
 
-      // Hamma ma'lumotlarni bo'laklab (chunk) yuklab olamiz
       while (hasMore) {
         const { data, error } = await supabase
           .from("promo_codes")
@@ -153,11 +152,11 @@ export default function CodeGenerator({ lang = "uz" }) {
         }
       }
 
-      // 1. Ishlatilgan kodlarni ajratamiz
+      // 1. Ishlatilgan kodlarni ajratamiz (status === "used")
       const spent = allData.filter(c => c.status === "used");
       setUsedCodes(spent);
 
-      // 2. Faol va pauzadagi guruhlarni (partiyalarni) hisoblaymiz
+      // 2. Faol va pauzadagi guruhlarni (partiyalarni) hisoblaymiz (status !== "used")
       const activeAndPaused = allData.filter(c => c.status !== "used");
       const groups = {};
 
@@ -195,11 +194,27 @@ export default function CodeGenerator({ lang = "uz" }) {
     }
   }, [lang, t.toastErrLoad]);
 
+  // 🔔 Realtime o'zgarishlarni kuzatish va ma'lumotlarni yangilab turish
   useEffect(() => {
     fetchBatches();
+
+    const channel = supabase
+      .channel('promo_codes_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'promo_codes' },
+        () => {
+          fetchBatches(); // O'zgarish bo'lganda yangilaydi
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchBatches]);
 
-  // 📂 Partiya ochilganda uning ichidagi kod matnlarini bo'laklab (paginated) lazy loading bilan tortish
+  // 📂 Partiya ochilganda uning ichidagi kod matnlarini lazy yuklash
   const handleToggleBatchExpand = async (batch) => {
     if (expandedBatch === batch.batchId) {
       setExpandedBatch(null);

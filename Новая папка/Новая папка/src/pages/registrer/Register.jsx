@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "../../supabase/client"; // Supabase ulanish faylingiz yo'li
+import { supabase } from "../../supabase/client";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import "./register.css"; // CSS faylingiz yo'li
+import "./register.css";
 
 const UZBEKISTAN_DATA = {
   "Toshkent shahri": ["Bektemir tumani", "Chilonzor tumani", "Mirobod tumani", "Mirzo Ulug‘bek tumani", "Olmazor tumani", "Sergeli tumani", "Shayxontohur tumani", "Uchtepa tumani", "Yakkasaroy tumani", "Yashnobod tumani", "Yunusobod tumani", "Yangihayot tumani"],
@@ -15,7 +15,7 @@ const UZBEKISTAN_DATA = {
   "Namangan": ["Namangan shahri", "Chortoq tumani", "Chust tumani", "Kosonsoy tumani", "Mingbuloq tumani", "Namangan tumani", "Norin tumani", "Pop tumani", "To‘raqo‘rg‘on tumani", "Uychi tumani", "Uchko‘prik tumani", "Yangiqo‘rg‘on tumani", "Davlatobod tumani", "Yangi Namangan tumani"],
   "Navoiy": ["Navoiy shahri", "Zarafshon shahri", "G‘ozg‘on shahri", "Karmana tumani", "Konimex tumani", "Qiziltepa tumani", "Xatirchi tumani", "Navbahor tumani", "Nurota tumani", "Tomdi tumani", "Uchquduq tumani"],
   "Qashqadaryo": ["Qarshi shahri", "Shahrisabz shahri", "Chiroqchi tumani", "Dehqonobod tumani", "G‘uzor tumani", "Kasbi tumani", "Kitob tumani", "Koson tumani", "Ko‘kdala tumani", "Mirishkor tumani", "Muborak tumani", "Nishan tumani", "Qarshi tumani", "Shahrisabz tumani", "Yakkabog‘ tumani", "Kamashi tumani"],
-  "Samarqand": ["Samarqand shahri", "Kattaqo‘rg‘on shahri", "Bulung‘ur tumani", "Ishtixon tumani", "Jomboy tumani", "Kattaqo‘rg‘on tumani", "Narpay tumani", "Nurobod tumani", "Oqdaryo tumani", "Paxtaachi tumani", "Payariq tumani", "Pastdarg‘om tumani", "Samarqand tumani", "Toyloq tumani", "Urgut tumani", "Qo‘shrabot tumani"],
+  "Samarqand": ["Samarqand shahri", "Kattaqo‘rg‘on shahri", "Bulung‘ur tumani", "Ishtixon tumani", "Jomboy tumani", "Kattaqo‘rg‘on tumani", "Narpay tumani", "Nurobod tumani", "Oqdaryo tumani", "Paxtachi tumani", "Payariq tumani", "Pastdarg‘om tumani", "Samarqand tumani", "Toyloq tumani", "Urgut tumani", "Qo‘shrabot tumani"],
   "Sirdaryo": ["Guliston shahri", "Shirin shahri", "Yangiyer shahri", "Boyovut tumani", "Guliston tumani", "Xovos tumani", "Mirzaobod tumani", "Oqoltin tumani", "Sardoba tumani", "Sayxunobod tumani", "Sirdaryo tumani"],
   "Surxondaryo": ["Termiz shahri", "Angor tumani", "Boysun tumani", "Denov tumani", "Jarqo‘rg‘on tumani", "Qiziriq tumani", "Qumqo‘rg‘on tumani", "Muzrabot tumani", "Oltinsoy tumani", "Sariosiyo tumani", "Sherobod tumani", "Sho‘rchi tumani", "Termiz tumani", "Uzun tumani"],
   "Qoraqalpog'iston Respublikasi": ["Nukus shahri", "Amudaryo tumani", "Beruniy tumani", "Chimboy tumani", "Ellikqal‘a tumani", "Kegeyli tumani", "Mo‘ynoq tumani", "Nukus tumani", "Qonliko‘l tumani", "Qo‘ng‘irot tumani", "Qorao‘zak tumani", "Shumanay tumani", "Taxtako‘pir tumani", "To‘rtko‘l tumani", "Xo‘jayli tumani", "Taxiatosh tumani", "Bo‘zatov tumani"]
@@ -23,7 +23,7 @@ const UZBEKISTAN_DATA = {
 
 const KASBLAR_DATA = [
   "Santexnik", "Elektrik", "Malyar / Suvoqchi", "Kafelchi (Plitkar)", 
-  "Gipsokarton ustasi", "Armaturchi / Svarshik", "Alyumin profil ustasi (Akfa)", 
+  "Gvipsokarton ustasi", "Armaturchi / Svarshik", "Alyumin profil ustasi (Akfa)", 
   "Mebelchi", "Duradgor (Yog'och ustasi)", "Boshqa"
 ];
 
@@ -36,7 +36,7 @@ export default function Register() {
   const [region, setRegion] = useState("");
   const [district, setDistrict] = useState(""); 
   const [job, setJob] = useState("");
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true); // Sahifa yuklanayotganda avtomatik tekshiruv uchun true qilib turamiz
 
   const [regionOpen, setRegionOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
@@ -47,8 +47,7 @@ export default function Register() {
   const jobRef = useRef(null);
   const navigate = useNavigate();
 
-  // Telegram WebApp xavfsiz tekshirish
-  const tg = window?.Telegram?.WebApp;
+  const tg = window.Telegram?.WebApp;
 
   useEffect(() => {
     if (tg) {
@@ -56,25 +55,13 @@ export default function Register() {
       tg.expand(); 
     }
 
-    const checkExistingUser = async () => {
-      try {
-        // 1. Birinchi navbatda LocalStorage tekshirish
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const localUser = JSON.parse(storedUser);
-          if (localUser && localUser.region && localUser.job) {
-            if (localUser.role === "admin") {
-              navigate("/admin-dashboard", { replace: true });
-            } else {
-              navigate("/user-dashboard", { replace: true });
-            }
-            return;
-          }
-        }
+    // 🔥 AVTOMATIK TIZIMGA KIRISH (Auto-Login) LOGIKASI
+    const checkUserAndLogin = async () => {
+      const telegramId = tg?.initDataUnsafe?.user?.id;
 
-        // 2. Telegram ID orqali Supabase'dan tekshirish
-        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
-        if (telegramId) {
+      if (telegramId) {
+        try {
+          // Supabase'dan ushbu Telegram ID ga tegishli profilni qidiramiz
           const { data: existingUser, error } = await supabase
             .from("profiles")
             .select("*")
@@ -83,30 +70,27 @@ export default function Register() {
 
           if (error) throw error;
 
-          if (existingUser && existingUser.region && existingUser.job) {
+          // Agar foydalanuvchi topilsa, ssenariyni chetlab o'tib to'g'ridan-to'g'ri tizimga kirgizamiz
+          if (existingUser) {
             localStorage.setItem("user", JSON.stringify(existingUser));
             toast.success("Xush kelibsiz!");
+            
+            // Roliga qarab yo'naltiramiz
             if (existingUser.role === "admin") {
               navigate("/admin-dashboard", { replace: true });
             } else {
               navigate("/user-dashboard", { replace: true });
             }
-            return; 
+            return; // To'xtatamiz, quyidagi yuklashlarni ochib o'tirmaymiz
           }
-
-          if (existingUser) {
-            setFullName(existingUser.full_name || "");
-            setPhone(existingUser.phone ? formatPhoneNumber(existingUser.phone) : "+998 ");
-          }
+        } catch (err) {
+          console.error("Avtomatik kirishda xatolik:", err.message);
         }
-      } catch (err) {
-        console.error("Foydalanuvchini tekshirishda xatolik:", err);
-      } finally {
-        setLoading(false); 
       }
+      setLoading(false); // Agar foydalanuvchi topilmasa yoki Telegramdan kirmagan bo'lsa, yuklashni to'xtatib formani ko'rsatamiz
     };
 
-    checkExistingUser();
+    checkUserAndLogin();
 
     function handleClickOutside(event) {
       if (regionRef.current && !regionRef.current.contains(event.target)) setRegionOpen(false);
@@ -118,8 +102,8 @@ export default function Register() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [tg, navigate]);
 
-  const formatPhoneNumber = (value) => {
-    let input = value;
+  const handlePhoneChange = (e) => {
+    let input = e.target.value;
     if (!input.startsWith("+998")) {
       input = "+998 " + input.replace(/\D/g, "");
     }
@@ -131,11 +115,8 @@ export default function Register() {
     if (limitedNumbers.length > 2) formatted += " " + limitedNumbers.slice(2, 5);
     if (limitedNumbers.length > 5) formatted += " " + limitedNumbers.slice(5, 7);
     if (limitedNumbers.length > 7) formatted += " " + limitedNumbers.slice(7, 9);
-    return formatted;
-  };
 
-  const handlePhoneChange = (e) => {
-    setPhone(formatPhoneNumber(e.target.value));
+    setPhone(formatted);
   };
 
   const handleStepOneNext = () => {
@@ -166,63 +147,56 @@ export default function Register() {
     }
 
     const cleanPhone = phone.replace(/\s/g, "");
-    const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
+    const telegramId = tg?.initDataUnsafe?.user?.id || null;
 
+    await saveUserToSupabase(cleanPhone, telegramId);
+  };
+
+  const saveUserToSupabase = async (rawPhone, telegramId) => {
     setLoading(true);
     try {
-      // Mavjud foydalanuvchini tekshirish
+      // 1. Telefon raqam band emasligini tekshirish
       const { data: existing, error: checkError } = await supabase
         .from("profiles")
-        .select("*")
-        .or(`phone.eq.${cleanPhone}${telegramId ? `,telegram_id.eq.${telegramId}` : ""}`)
+        .select("*") 
+        .eq("phone", rawPhone)
         .maybeSingle();
 
       if (checkError) throw checkError;
 
-      const userData = {
-        telegram_id: telegramId,
+      if (existing) {
+        toast.error("Bu telefon raqami allaqachon ro‘yxatdan o‘tgan!");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Yangi foydalanuvchi obyekti
+      const newUser = {
         full_name: fullName.trim(),
-        phone: cleanPhone,
+        phone: rawPhone,
+        telegram_id: telegramId,
         birth_date: birthDate,
         region,
         district, 
         job,
         password: password, 
-        role: existing?.role || "user"
+        role: "user"
       };
 
-      let savedData;
+      const { data: insertedData, error: insertError } = await supabase
+        .from("profiles")
+        .insert([newUser])
+        .select()
+        .single();
 
-      if (existing) {
-        const { data: updatedData, error: updateError } = await supabase
-          .from("profiles")
-          .update(userData)
-          .eq("id", existing.id)
-          .select()
-          .single();
+      if (insertError) throw insertError;
 
-        if (updateError) throw updateError;
-        savedData = updatedData;
-      } else {
-        const { data: insertedData, error: insertError } = await supabase
-          .from("profiles")
-          .insert([userData])
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        savedData = insertedData;
-      }
-
-      localStorage.setItem("user", JSON.stringify(savedData));
+      // 3. Mahalliy xotiraga yozish va dashboardga yo'naltirish
+      localStorage.setItem("user", JSON.stringify(insertedData));
       toast.success("Ro‘yxatdan muvaffaqiyatli o‘tdingiz!");
       
       setTimeout(() => {
-        if (savedData.role === "admin") {
-          navigate("/admin-dashboard", { replace: true });
-        } else {
-          navigate("/user-dashboard", { replace: true });
-        }
+        navigate("/user-dashboard", { replace: true });
       }, 150);
 
     } catch (err) {
@@ -232,20 +206,17 @@ export default function Register() {
     }
   };
 
+  // 🔥 Tekshiruv ketayotganda ekranda loading spinner yoki matn chiqarib turamiz
   if (loading && step === 1) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontFamily: "sans-serif", background: "#f5f5f5" }}>
-        <div style={{ textAlign: "center" }}>
-          <h3>Yuklanmoqda...</h3>
-          <p style={{ color: "#666" }}>Iltimos kuting</p>
-        </div>
+      <div className="auth-page-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <div className="loader">Yuklanmoqda... Iltimos kuting.</div>
       </div>
     );
   }
 
   return (
     <div className="auth-page-wrapper">
-      {/* Stepper (Bosqichlar vizuali) */}
       <div className="stepper-wrapper">
         <div className={`step-circle ${step >= 1 ? "active" : ""}`}>1</div>
         <div className="step-line"></div>
@@ -257,7 +228,6 @@ export default function Register() {
       <div className="auth">
         <h2>Ro'yxatdan o'tish</h2>
 
-        {/* 1-BOSQICH: Ism, Telefon, Parol */}
         {step === 1 && (
           <div className="step-container">
             <div className="input-group">
@@ -290,13 +260,10 @@ export default function Register() {
           </div>
         )}
 
-        {/* 2-BOSQICH: Tug'ilgan sana */}
         {step === 2 && (
           <div className="step-container">
             <div className="input-group">
-              <label style={{ fontSize: "14px", color: "#666", display: "block", marginBottom: "5px" }}>
-                Tug'ilgan kuningiz
-              </label>
+              <label style={{ fontSize: "14px", color: "#666", display: "block", marginBottom: "5px" }}>Tug'ilgan kuningiz</label>
               <input
                 type="date"
                 value={birthDate}
@@ -314,10 +281,8 @@ export default function Register() {
           </div>
         )}
 
-        {/* 3-BOSQICH: Hudud va Kasb */}
         {step === 3 && (
           <div className="step-container">
-            {/* Viloyat tanlash */}
             <div className="input-group" ref={regionRef}>
               <div 
                 className={`custom-select-trigger ${!region ? "is-placeholder" : ""}`}
@@ -344,7 +309,6 @@ export default function Register() {
               )}
             </div>
 
-            {/* Tuman tanlash (Faqat viloyat tanlansa chiqadi) */}
             {region && (
               <div className="input-group" ref={districtRef}>
                 <div 
@@ -372,7 +336,6 @@ export default function Register() {
               </div>
             )}
 
-            {/* Kasb tanlash */}
             <div className="input-group" ref={jobRef}>
               <div 
                 className={`custom-select-trigger ${!job ? "is-placeholder" : ""}`}
